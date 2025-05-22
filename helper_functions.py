@@ -57,3 +57,9 @@ def extract_cpc_no_from_filename(filename: str) -> int:
     if match:
         return int(match.group(1))
     raise ValueError(f"Could not extract CPC number from filename: {filename}")
+
+def normalize_percent(value):
+        """Convert percent input like 25 or '25%' to float (0.25)"""
+        if isinstance(value, str) and value.endswith('%'):
+            value = value.rstrip('%')
+        return float(value) / 100 if float(value) > 1 else float(value)

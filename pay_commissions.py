@@ -211,11 +211,11 @@ def generate_next_pay_commission(present_pay_matrix_csv='7th_CPC.csv',
     :param percent_last_DA: float, optional (e.g., 0.50 for 50%)
     :return: DataFrame of next CPC Pay Matrix (also saved to CSV)
     """
-    def normalize_percent(value):
-        """Convert percent input like 25 or '25%' to float (0.25)"""
-        if isinstance(value, str) and value.endswith('%'):
-            value = value.rstrip('%')
-        return float(value) / 100 if float(value) > 1 else float(value)
+    # def normalize_percent(value):
+    #     """Convert percent input like 25 or '25%' to float (0.25)"""
+    #     if isinstance(value, str) and value.endswith('%'):
+    #         value = value.rstrip('%')
+    #     return float(value) / 100 if float(value) > 1 else float(value)
 
     # Validation
     if fitment_factor is None:
