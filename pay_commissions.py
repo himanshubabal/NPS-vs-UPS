@@ -263,7 +263,7 @@ def generate_next_pay_commission(present_pay_matrix_csv='7th_CPC.csv',
     return new_df
 
 
-# NEXT --> Career journey -> defined through given promotions (level/which prom, year of prom)
+# Career journey -> defined through given promotions (level/which prom, year of prom)
 def career_progression(present_level=10, present_year_in_level=1, promotion_years_array=[4, 5, 4, 1, 4, 7, 5, 3], 
                        pay_matrix_csv='7th_CPC.csv', dob='20/07/1996', doj='9/10/24', is_ias=False,
                        pay_commission_implement_years=[2026, 2036, 2046, 2056, 2066], fitment_factors=[2, 2, 2, 2, 2]):
