@@ -1,5 +1,6 @@
 from datetime import datetime
 from datetime import date
+import pandas as pd
 import re
 
 # To make parse_date_parts.date, parse_date_parts.month, and parse_date_parts.year directly accessible 
@@ -39,6 +40,28 @@ def parse_date(date_str):
     
     raise ValueError(f"Unrecognized date format: {date_str}")
 
+def parse_date_new(date_str):
+    formats = [
+        "%d/%m/%Y", "%d/%m/%y",   # 19/05/2025, 19-05-2025, 19.05.2025, 19 05 2025
+        "%d-%m-%Y", "%d-%m-%y",   # 19/May/2025, April & Apr, etc
+        "%d.%m.%Y", "%d.%m.%y",
+        "%d %m %Y", "%d %m %y",
+        "%d-%b-%Y", "%d-%b-%y",
+        "%d-%B-%Y", "%d-%B-%y",
+        "%d %b %Y", "%d %b %y",
+        "%d %B %Y", "%d %B %y",
+    ]
+
+    for fmt in formats:
+        try:
+            dt = datetime.strptime(date_str.strip(), fmt)
+            return dt
+        except ValueError:
+            continue
+    
+    raise ValueError(f"Unrecognized date format: {date_str}")
+
+
 def get_retirement_date(dob_str):
     parsed = parse_date(dob_str)
     dob = date(parsed.year, parsed.month, parsed.date)
@@ -63,3 +86,18 @@ def normalize_percent(value):
         if isinstance(value, str) and value.endswith('%'):
             value = value.rstrip('%')
         return float(value) / 100 if float(value) > 1 else float(value)
+
+
+def load_csv_into_df(csv_path : str):
+    # Load the pay matrix CSV once and keep in memory
+    df_loaded = pd.read_csv(csv_path)
+    # Convert column names to string for consistency
+    df_loaded.columns = df_loaded.columns.map(str)
+    return df_loaded
+
+
+
+
+# print(get_retirement_date('20/07/1966'))
+
+

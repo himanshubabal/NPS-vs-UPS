@@ -27,7 +27,7 @@ def get_progressive_change_matrix(initial_rate, final_rate, divide_periods, incr
 
 
 def get_DA_matrix(initial_inflation_rate: float = 7.0, final_inflation_rate: float = 3.0, duration_years: int = 40, 
-                  joining_year=2024, pay_commission_implement_years=[2026, 2036, 2046, 2056, 2066]):
+                  joining_year=2024, joining_da=55, pay_commission_implement_years=[2026, 2036, 2046, 2056, 2066]):
     # For duration years * 2 (so 6 monthly), increment of 6 months (hence increment_step of 0.5)
     inflation_matrix = get_progressive_change_matrix(initial_inflation_rate, final_inflation_rate, duration_years*2, 0.5)
     # to handle pay commission, resetting DA to 0 every time new pay commission is applied
@@ -37,12 +37,15 @@ def get_DA_matrix(initial_inflation_rate: float = 7.0, final_inflation_rate: flo
     year = joining_year
     da_matrix = {}
     # Keeping the DA of joining first half and second half year same
-    da_matrix[float(joining_year)] = inflation_matrix[0.0]/2.0
+    da_matrix[float(joining_year)] = inflation_matrix[0.0]/2.0 + joining_da
 
     for six_month_period in inflation_matrix:
         # since the inflation matrix starts from 0.0, start year from 6 months ahead, initial yr DA set above
         year += 0.5
         current_da += inflation_matrix[six_month_period]/2.0
+
+        if year < pay_commission_implement_years[0]:
+            current_da += joining_da
 
         # Handling Pay Commissions, if pay commission -> make DA 0, and start again
         if year == pay_commission_implement_years[pay_commission_index]:
@@ -71,8 +74,8 @@ def get_interest_matrix(initial_interest_rate: float = 12.0, final_interest_rate
 
 if __name__ == "__main__":
     joining_year = 2024.5
-    initial_rate = 10
-    final_rate = 10
+    initial_rate = 7
+    final_rate = 3
     duration_years = 40
     
     da_matrix = get_DA_matrix(joining_year=joining_year, initial_inflation_rate=initial_rate, final_inflation_rate=final_rate, duration_years=duration_years)
