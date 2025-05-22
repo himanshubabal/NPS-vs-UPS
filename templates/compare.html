@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Compare NPS vs UPS</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h2>Simulation Input</h2>
+    <form method="POST">
+        DOB: <input type="date" name="dob" value="2002-07-01" required><br>
+        Joining Date: <input type="date" name="joining_date" value="2024-12-09" required><br>
+        Contribution (%): <input type="number" name="contrib" value="20"><br>
+        Return Rate (%): <input type="number" name="return" value="8"><br>
+        Inflation Rate (%): <input type="number" name="inflation" value="4"><br>
+        <button type="submit">Simulate</button>
+    </form>
+
+    {% if data %}
+        <h2>Results</h2>
+        <canvas id="chart" width="800" height="400"></canvas>
+        <table>
+            <tr>
+                {% for key in data[0].keys() %}
+                <th>{{ key }}</th>
+                {% endfor %}
+            </tr>
+            {% for row in data %}
+            <tr>
+                {% for val in row.values() %}
+                <td>{{ val }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+
+        <script>
+            const labels = {{ data|map(attribute='Period')|list|tojson }};
+            const corpus = {{ data|map(attribute='NPS Corpus')|list|tojson }};
+            const pension = {{ data|map(attribute='UPS Pension')|list|tojson }};
+
+            const ctx = document.getElementById('chart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: "NPS Corpus",
+                            data: corpus.filter(x => x !== "-"),
+                            borderColor: 'blue',
+                            fill: false
+                        },
+                        {
+                            label: "UPS Pension",
+                            data: pension.filter(x => x !== "-"),
+                            borderColor: 'green',
+                            fill: false
+                        }
+                    ]
+                }
+            });
+        </script>
+    {% endif %}
+</body>
+</html>
