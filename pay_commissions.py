@@ -64,7 +64,6 @@ def get_level_year_from_basic_pay(basic_pay, pay_matrix_csv='7th_CPC.csv'):
     return best_match
 
 
-# def annual_increment(current_level, year, basic_pay, pay_matrix_csv='7th_CPC.csv'):
 def annual_increment(current_level, year, pay_matrix_csv='7th_CPC.csv'):
     """
     Increment pay by one row within the same level. If already at max pay, stay at same amount,
@@ -111,7 +110,6 @@ def annual_increment(current_level, year, pay_matrix_csv='7th_CPC.csv'):
     return (level_str, year + 1, next_basic)
 
 
-# def promote_employee(current_level, year, basic_pay, pay_matrix_csv='7th_CPC.csv', is_ias=False):
 def promote_employee(current_level, year, pay_matrix_csv='7th_CPC.csv', is_ias=False):
     """
     Promote employee based on rules:
@@ -266,11 +264,8 @@ def generate_next_pay_commission(present_pay_matrix_csv='7th_CPC.csv',
 
 
 # NEXT --> Career journey -> defined through given promotions (level/which prom, year of prom)
-# ToDo --> max no of promotions --> verify max upto L18, from length of prom_array
-# (Done) ToDo --> DoB, Retirement Year, only for service duration years
-# (Done) ToDo --> implement Pay commissions also every 10 years starting from 2026, 36, 46, 56, 66, etc
 def career_progression(present_level=10, present_year_in_level=1, promotion_years_array=[4, 5, 4, 1, 4, 7, 5, 3], 
-                       pay_matrix_csv='7th_CPC.csv', dob='1/1/2000', doj='9/12/24', is_ias=False,
+                       pay_matrix_csv='7th_CPC.csv', dob='20/07/1996', doj='9/10/24', is_ias=False,
                        pay_commission_implement_years=[2026, 2036, 2046, 2056, 2066], fitment_factors=[2, 2, 2, 2, 2]):
     """
     Simulates career progression with annual increments and level promotions
@@ -299,12 +294,18 @@ def career_progression(present_level=10, present_year_in_level=1, promotion_year
 
     # Extracting Year in which joined service from Date of Joining of Service, and year of retirement
     service_joining_year = parse_date(doj).year
-    retirement_year = get_retirement_date(dob).year
+    service_joining_month = parse_date(doj).month
+    # If joined after 1st July, start counting from next year onwards, else count half year
+    service_joining_year += 1 if service_joining_month > 6 else 0.5
+    retirement_year = get_retirement_date(dob).year  
+    retirement_month = get_retirement_date(dob).month   
+    # If retirement after 1st July, additional increment applicable
+    retirement_year += 0.5 if retirement_month > 6 else 0 
     max_service_years = retirement_year - service_joining_year
 
     # Present pay level, etc
-    level = str(present_level) # 10
-    year = present_year_in_level # 1
+    level = str(present_level)
+    year = present_year_in_level
     progression = []
 
     # Validate Present Level
@@ -314,7 +315,7 @@ def career_progression(present_level=10, present_year_in_level=1, promotion_year
     # Calculate max number of possible promotions
     current_index = levels.index(level)
     if is_ias and '13A' in levels and level == '13':
-        max_promotions = len(levels) - current_index - 2  # skipping 13A
+        max_promotions = len(levels) - current_index - 2
     else:
         max_promotions = len(levels) - current_index - 1
     # Check if promotion_years_array has more no of promotions than possible
@@ -327,30 +328,29 @@ def career_progression(present_level=10, present_year_in_level=1, promotion_year
     # Data to be updated in each loop
     basic_pay = current_pay_matrix[level].iloc[year - 1]
     current_service_year = 0
-    level_index = 0  # Tracks position in promotion_years_array
+    level_index = 0                     # Tracks position in promotion_years_array
     years_in_current_level = 0
-    pay_commission_index = 0  # Index of pay_commission_implement_years
+    pay_commission_index = 0            # Index of pay_commission_implement_years
     present_pay_comm_no = extract_cpc_no_from_filename(pay_matrix_csv); # 7
 
     # FOR: Year -> 2026 (8th CPC year)
-    while current_service_year <= max_service_years: # 2 < 37
-        service_year = service_joining_year + current_service_year # 2026 = 2024 + 2
+    while current_service_year <= max_service_years:
+        # If joined before 31st Dec, count for increment
+        # Join month > 7 (joined after july) --> initial half of that year -- no service
+        # Join month b/w 1 & 6 (joined between Jan to June) --> initial half -- service, but no increment that year
+
+        service_year = service_joining_year + current_service_year
+        current_service_year += 0.5
+        years_in_current_level += 1 if service_year % 1 == 0.5 else 0
 
         # Record current state
         progression.append({
-            "Years of Service": current_service_year + 1, # 3=2+1
-            "Year": service_year, # 2026
-            "Level": level, # 10
-            "Year in Level": year, # 3=2+1
-            "Basic Pay": basic_pay # 59500 ????????
+            "Years of Service": current_service_year,
+            "Year": service_year,
+            "Level": level,
+            "Year in Level": year,
+            "Basic Pay": basic_pay
         })
-
-        years_in_current_level += 1 # 1
-        current_service_year += 1 # 1
-
-        # LOG
-        # print(str(current_service_year) + ". " + "Year: " + str(service_year) + ", Level: " + str(level) + 
-        #       ", Year in Current Level: " + str(years_in_current_level) + ", Basic Pay: " + str(basic_pay))
 
         # ----------------- PAY COMMISSION -----------------
         # Apply new pay commission if due nexy year - so that new pay matrix are used for next year
@@ -359,11 +359,6 @@ def career_progression(present_level=10, present_year_in_level=1, promotion_year
             fit_factor = fitment_factors[pay_commission_index]
             next_pay_comm_no = present_pay_comm_no + 1 # Eg. 8 = 7 + 1;  9 = 8 + 1
             next_pay_comm_fileName = f"{next_pay_comm_no}th_CPC_fitment_factor_{fit_factor}.csv"
-
-            # L O G
-            # print('.............................................P_A_Y  C_O_M_M_I_S_S_I_O_N......................................')
-            # print('Pay Commission No: ' + str(next_pay_comm_no))
-            # print('Fine Name: ' + next_pay_comm_fileName)
 
             # If csv exists, load it, if not, prepare it & load
             if os.path.exists(next_pay_comm_fileName):
@@ -387,72 +382,24 @@ def career_progression(present_level=10, present_year_in_level=1, promotion_year
             # Update variables
             years_in_current_level = 0
             level_index += 1
-            continue  # skip increment on promotion year
-
-        # Apply annual increment (whether in middle of level or after final promotion)
-        try:
-            # print('-------Applying----Increment------')
-            # level, year, basic_pay = annual_increment(level, year, basic_pay, pay_matrix_csv=pay_matrix_csv)
-            level, year, basic_pay = annual_increment(level, year, pay_matrix_csv=pay_matrix_csv)
-            # print(level, year, basic_pay)
-        except ValueError:
-            break  # Likely maxed out pay
+            continue  # skip increment on promotion year (continue ends loop here, next part of code is not run in this case)
         
+        # Increment -- > applicable only in July each year (ie. mid year), 
+        #                and must have atleast 6 months of service till 1st Juky that year
+        if service_year % 1 == 0.5 and current_service_year > 0.5:
+            # print('Increment Applicable')
+            level, year, basic_pay = annual_increment(level, year, pay_matrix_csv=pay_matrix_csv)
+
     return progression
 
 
 
 # --- Example Usage ---
 if __name__ == "__main__":
-    # progression = career_progression()
     progression = career_progression(is_ias=True)
 
     for year in progression:
         print(year)
 
-    # print(career_progression(is_ias=True))
+    print(len(progression))
 
-    # date_str = "10-Apr-96"
-    # print(f"Day: {parse_date(date_str).date}, Month: {parse_date(date_str).month}, Year: {parse_date(date_str).year}")
-
-    # print(promote_employee(current_level='16', year=3, basic_pay=217900, pay_matrix_csv='7th_CPC.csv', is_ias=False))
-    # print(promote_employee(current_level='16', year=4, basic_pay=224400, pay_matrix_csv='7th_CPC.csv', is_ias=False))
-    # print(promote_employee(current_level='16', year=5, basic_pay=224400, pay_matrix_csv='7th_CPC.csv', is_ias=False))
-    # print(promote_employee(current_level='16', year=6, basic_pay=224400, pay_matrix_csv='7th_CPC.csv', is_ias=False))
-    
-    
-    
-    # print(annual_increment(current_level=16, year=1, basic_pay=205400, pay_matrix_csv='7th_CPC.csv'))
-    # print(annual_increment(current_level=16, year=2, basic_pay=211600, pay_matrix_csv='7th_CPC.csv'))
-    # print(annual_increment(current_level=16, year=3, basic_pay=217900, pay_matrix_csv='7th_CPC.csv'))
-    # print(annual_increment(current_level=16, year=4, basic_pay=224400, pay_matrix_csv='7th_CPC.csv'))
-    # print(annual_increment(current_level=16, year=5, basic_pay=224400, pay_matrix_csv='7th_CPC.csv'))
-    # print(annual_increment(current_level=16, year=6, basic_pay=224400, pay_matrix_csv='7th_CPC.csv'))
-    # print(annual_increment(current_level=16, year=7, basic_pay=224400, pay_matrix_csv='7th_CPC.csv'))
-    # print(annual_increment(current_level=16, year=8, basic_pay=224400, pay_matrix_csv='7th_CPC.csv'))
-    # print(annual_increment(current_level=16, year=9, basic_pay=224400, pay_matrix_csv='7th_CPC.csv'))
-
-    # print(get_basic_pay(10, 1))
-    # print(get_basic_pay('11', 1))
-    # print(get_level_year_from_basic_pay(56100))  # ➝ ('10', 1)
-    # print(get_level_year_from_basic_pay(112400)) # ➝ ('12', 13)
-    # print(get_level_year_from_basic_pay(250000)) # ➝ ('18', 1)
-    # print(get_basic_pay('13A', 5)) # -> 147600
-    # # print(promote_employee(10, 3, 59500))
-    # # print(promote_employee('13A', 5, 147600))
-    # # print(promote_employee('13A', 5, 152000))
-    # # print(promote_employee('10', 5, 63100))
-    # print(promote_employee(10, 5, 63100))
-    # print(promote_employee(10, 5, 63100, is_ias=True))
-    # print(annual_increment(10, 1, 56100))    # ➝ ('10', 2, 57800)
-    # print(len(_PAY_MATRIX_DF))
-    # print(annual_increment("13A", 18, 216600))  # ➝ ('13A', 19, 216600) — same pay, year increased
-
-
-    # generate_next_pay_commission("7th_CPC.csv", percent_inc_salary=0.18, percent_last_DA=0.5)
-    # generate_next_pay_commission(present_pay_matrix_csv="7th_CPC.csv", fitment_factor=1.86)
-    # generate_next_pay_commission() --> will outout '8th_CPC_fitment_factor_2.csv'
-    # generate_next_pay_commission(present_pay_matrix_csv="7th_CPC.csv")
-    # generate_next_pay_commission(present_pay_matrix_csv="8th_CPC_fitment_factor_1.86.csv", percent_inc_salary=0.21, percent_last_DA=0.66)
-    # generate_next_pay_commission(present_pay_matrix_csv="9th_CPC_fitment_factor_2.01.csv", percent_inc_salary=0.26, percent_last_DA=0.66)
-    # generate_next_pay_commission(present_pay_matrix_csv="10th_CPC_fitment_factor_2.09.csv", percent_inc_salary=0.20, percent_last_DA=0.66)
