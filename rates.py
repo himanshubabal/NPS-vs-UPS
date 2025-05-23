@@ -27,7 +27,7 @@ def get_progressive_change_matrix(initial_rate, final_rate, divide_periods, incr
 
 
 def get_DA_matrix(initial_inflation_rate: float = 7.0, final_inflation_rate: float = 3.0, duration_years: int = 40, 
-                  joining_year=2024, joining_da=55, pay_commission_implement_years=[2026, 2036, 2046, 2056, 2066]):
+                  joining_year:float=2024.0, joining_da:float=55, pay_commission_implement_years:list[int]=[2026, 2036, 2046, 2056, 2066]):
     # For duration years * 2 (so 6 monthly), increment of 6 months (hence increment_step of 0.5)
     inflation_matrix = get_progressive_change_matrix(initial_inflation_rate, final_inflation_rate, duration_years*2, 0.5)
     # to handle pay commission, resetting DA to 0 every time new pay commission is applied
@@ -66,19 +66,21 @@ def get_interest_matrix(initial_interest_rate: float = 12.0, final_interest_rate
     final_interest_matrix[float(joining_year)] = initial_interest_rate
 
     for six_month_period in int_matrix:
-        # since the interest matrix starts from 0.0
+        # since the interest matrix starts from 0.0, start year from 6 months ahead, initial yr interest set above
         year = joining_year + six_month_period + 0.5
         final_interest_matrix[year] = int_matrix[six_month_period]
 
     return final_interest_matrix
 
 if __name__ == "__main__":
-    joining_year = 2024.5
+    joining_year = 2024.0
     initial_rate = 7
     final_rate = 3
     duration_years = 40
+    joining_da = 55
+    pay_commission_implement_years = [2026, 2036, 2046, 2056, 2066]
     
-    da_matrix = get_DA_matrix(joining_year=joining_year, initial_inflation_rate=initial_rate, final_inflation_rate=final_rate, duration_years=duration_years)
+    da_matrix = get_DA_matrix(joining_year=joining_year, initial_inflation_rate=initial_rate, final_inflation_rate=final_rate, duration_years=duration_years, joining_da=joining_da, pay_commission_implement_years=pay_commission_implement_years)
     int_matrix = get_interest_matrix(joining_year=joining_year, initial_interest_rate=initial_rate, final_interest_rate=final_rate, duration_years=duration_years)
     
     for i in da_matrix:

@@ -3,10 +3,11 @@ import numpy as np
 import re
 import os
 
+from itertools import accumulate
 from helper_functions import *
 
 
-def get_basic_pay(level=10, year=1, pay_matrix_csv='7th_CPC.csv'):
+def get_basic_pay(level, year, pay_matrix_df):
     """
     Fetch basic pay for given pay level and year (0-based index).
     Uses PAY_MATRIX from 7th_CPC_filled.csv.
@@ -15,41 +16,39 @@ def get_basic_pay(level=10, year=1, pay_matrix_csv='7th_CPC.csv'):
     :param year: int (starts from 1)
     :return: int (basic pay)
     """
-    # Load the pay matrix CSV once and keep in memory
-    _PAY_MATRIX_DF = pd.read_csv(pay_matrix_csv)
-
-    # Convert column names to string for consistency
-    _PAY_MATRIX_DF.columns = _PAY_MATRIX_DF.columns.map(str)
-
     level_str = str(level)
     
-    if level_str not in _PAY_MATRIX_DF.columns:
+    # Validation
+    if level_str not in pay_matrix_df.columns:
         raise ValueError(f"Level {level} not found in pay matrix.")
 
-    if not (1 <= year <= len(_PAY_MATRIX_DF)):
-        raise ValueError(f"Year {year} is out of range (must be 1 to {len(_PAY_MATRIX_DF)}).")
+    if not (1 <= year <= len(pay_matrix_df)):
+        raise ValueError(f"Year {year} is out of range (must be 1 to {len(pay_matrix_df)}).")
+    
+    # If at the last basic pay of a given level
+    max_steps = pay_matrix_df[level_str].last_valid_index() + 1  # since .iloc is 0-based
+    max_basic_pay = pay_matrix_df[level_str].iloc[max_steps - 1]
 
-    return int(_PAY_MATRIX_DF[level_str].iloc[year - 1])
+    # At the last step? No pay change, but year can increment
+    if year >= max_steps:
+        return max_basic_pay
+
+    # else, return the value reading it from given pay commission df
+    return int(pay_matrix_df[level_str].iloc[year - 1])
 
 
-def get_level_year_from_basic_pay(basic_pay, pay_matrix_csv='7th_CPC.csv'):
+def get_level_year_from_basic_pay(basic_pay, pay_matrix_df):
     """
     Given a basic pay, find the highest level and least year it appears at.
 
     :param basic_pay: int
     :return: (level, year) tuple
     """
-     # Load the pay matrix CSV once and keep in memory
-    _PAY_MATRIX_DF = pd.read_csv(pay_matrix_csv)
-
-    # Convert column names to string for consistency
-    _PAY_MATRIX_DF.columns = _PAY_MATRIX_DF.columns.map(str)
-
     # Storing found matches here
     found_matches = []
 
-    for level in _PAY_MATRIX_DF.columns:
-        for i, value in enumerate(_PAY_MATRIX_DF[level]):
+    for level in pay_matrix_df.columns:
+        for i, value in enumerate(pay_matrix_df[level]):
             if value == basic_pay:
                 year = i + 1  # convert 0-based index to 1-based year
                 found_matches.append((str(level), year))
@@ -64,7 +63,7 @@ def get_level_year_from_basic_pay(basic_pay, pay_matrix_csv='7th_CPC.csv'):
     return best_match
 
 
-def annual_increment(current_level, year, pay_matrix_csv='7th_CPC.csv'):
+def annual_increment(current_level, year, pay_matrix_df):
     """
     Increment pay by one row within the same level. If already at max pay, stay at same amount,
     but increase year by 1.
@@ -74,22 +73,16 @@ def annual_increment(current_level, year, pay_matrix_csv='7th_CPC.csv'):
     :param basic_pay: int
     :return: (level, new_year, new_basic_pay)
     """
-    # Load the pay matrix CSV once and keep in memory
-    _PAY_MATRIX_DF = pd.read_csv(pay_matrix_csv)
-
-    # Convert column names to string for consistency
-    _PAY_MATRIX_DF.columns = _PAY_MATRIX_DF.columns.map(str)
-
     level_str = str(current_level)
 
-    if level_str not in _PAY_MATRIX_DF.columns:
+    if level_str not in pay_matrix_df.columns:
         raise ValueError(f"Invalid level: {current_level}")
     
     # Since some levels have fewer steps (e.g., Level 13A might have only 18 stages, while Level 1 might have 40).
     #   Thus using 'max_steps', instead of using len(_PAY_MATRIX_DF) (which gives total number of rows in the DataFrame, 
     #   regardless of whether that level column has values)
-    max_steps = _PAY_MATRIX_DF[level_str].last_valid_index() + 1  # since .iloc is 0-based
-    max_basic_pay = _PAY_MATRIX_DF[level_str].iloc[max_steps - 1]
+    max_steps = pay_matrix_df[level_str].last_valid_index() + 1  # since .iloc is 0-based
+    max_basic_pay = pay_matrix_df[level_str].iloc[max_steps - 1]
 
     # print('Level: ' + level_str + ', Max Steps: ' + str(max_steps))
 
@@ -106,16 +99,16 @@ def annual_increment(current_level, year, pay_matrix_csv='7th_CPC.csv'):
     if year >= max_steps:
         return (level_str, year + 1, int(max_basic_pay))
 
-    next_basic = int(_PAY_MATRIX_DF[level_str].iloc[year])  # year is 1-based, so index = year
+    next_basic = int(pay_matrix_df[level_str].iloc[year])  # year is 1-based, so index = year
     return (level_str, year + 1, next_basic)
 
 
-def promote_employee(current_level, year, pay_matrix_csv='7th_CPC.csv', is_ias=False):
+def promote_employee(current_level, year, pay_matrix_df, is_ias=False):
     """
     Promote employee based on rules:
     - Validate current position.
     - Step down in same level.
-    - Move to next level (skip 13A if IAS from 13).
+    - Move to next level (skip 13A and 16 if IAS).
     - Find pay ≥ stepped_pay, then:
         * if IAS and level 10–12, go 2 rows further down.
     
@@ -125,46 +118,32 @@ def promote_employee(current_level, year, pay_matrix_csv='7th_CPC.csv', is_ias=F
     :param is_ias: bool
     :return: tuple (new_level, new_year, new_basic)
     """
-    # Load the pay matrix CSV once and keep in memory
-    _PAY_MATRIX_DF = pd.read_csv(pay_matrix_csv)
-
-    # Convert column names to string for consistency
-    _PAY_MATRIX_DF.columns = _PAY_MATRIX_DF.columns.map(str)
-
-
-    levels = list(_PAY_MATRIX_DF.columns)
+    levels = list(pay_matrix_df.columns)
     current_level_str = str(current_level)
 
     # Validating -> if 'Level' is valid
     if current_level_str not in levels:
         raise ValueError(f"Level {current_level} not found.")
-
     # Validating -> if 'Year' is valid
-    if not (1 <= year < len(_PAY_MATRIX_DF)):
-        raise ValueError(f"Year {year} must be between 1 and {len(_PAY_MATRIX_DF) - 1}.")
-    
-    # Validating -> if 'Basic Pay' is valid (ie. this shall be the basic pay for the given level & year)
-    # expected_basic = _PAY_MATRIX_DF[current_level_str].iloc[year - 1]
-    # max_steps = _PAY_MATRIX_DF[current_level_str].last_valid_index() + 1
-    # max_basic_pay = _PAY_MATRIX_DF[current_level_str].iloc[max_steps - 1]
-    # # If present basic pay is the max of a level, skip this validation
-    # if basic_pay != max_basic_pay:
-    #     if basic_pay != expected_basic:
-    #         raise ValueError(f"Mismatch: matrix has ₹{expected_basic} at Level {current_level}, Year {year}, not ₹{basic_pay}.")
+    if not (1 <= year < len(pay_matrix_df)):
+        raise ValueError(f"Year {year} must be between 1 and {len(pay_matrix_df) - 1}.")
 
     # Step 1: Move one cell down in same level
-    stepped_pay = _PAY_MATRIX_DF[current_level_str].iloc[year]  # year is 1-based, so year = index
+    stepped_pay = pay_matrix_df[current_level_str].iloc[year]  # year is 1-based, so year = index
     # For cases when current basic is the maximum basic pay in that column, keep basic same, just inc year
-    max_basic_pay = _PAY_MATRIX_DF[current_level_str].dropna().max()
+    max_basic_pay = pay_matrix_df[current_level_str].dropna().max()
     if pd.isna(stepped_pay):
         stepped_pay = max_basic_pay
 
     # Step 2: identify next level
     curr_index = levels.index(current_level_str)
 
-    # IAS case: skip 13A if coming from 13
+    # IAS case: skip 13A if coming from 13, go directly to 14
     if is_ias and current_level_str == '13':
         next_level_index = levels.index('14') if '14' in levels else curr_index + 2
+    # IAS case: skip 16 if coming from 15, go directly to 17
+    elif is_ias and current_level_str == '15':
+        next_level_index = levels.index('17') if '17' in levels else curr_index + 2
     else:
         next_level_index = curr_index + 1
     
@@ -174,7 +153,7 @@ def promote_employee(current_level, year, pay_matrix_csv='7th_CPC.csv', is_ias=F
 
     # Step 2: Move to next level
     next_level = str(levels[next_level_index])
-    next_column = _PAY_MATRIX_DF[next_level]
+    next_column = pay_matrix_df[next_level]
 
     # Step 3: find first cell ≥ stepped pay
     match_index = None
@@ -264,148 +243,151 @@ def generate_next_pay_commission(present_pay_matrix_csv='7th_CPC.csv',
 
 
 # Career journey -> defined through given promotions (level/which prom, year of prom)
-def career_progression(starting_level=10, starting_year_in_level=1, promotion_years_array=[4, 5, 4, 1, 4, 7, 5, 3], 
-                       starting_pay_matrix_csv='7th_CPC.csv', dob='20/07/1996', doj='9/10/24', is_ias=False,
+def career_progression(starting_level=10, starting_year_in_level=1, promotion_duration_array=[4, 5, 4, 1, 4, 7, 5, 3], 
+                       present_pay_matrix_csv='7th_CPC.csv', dob='20/07/1999', doj='9/10/24', is_ias=False,
                        pay_commission_implement_years=[2026, 2036, 2046, 2056, 2066], fitment_factors=[2, 2, 2, 2, 2]):
     """
     Simulates career progression with annual increments and level promotions
     based on fixed number of years spent per level.
 
-    :param present_level: str or int — starting pay level
-    :param present_year: int — current stage in the level
-    :param promotion_years_array: list[int] — years to spend in each level before promotion
-    :param service_joining_year: int — base service year (default 2024)
     :return: list of dicts for each service year with level, year-in-level, and pay
     """
-    # Load the pay matrix CSV once and keep in memory
-    current_pay_matrix = pd.read_csv(starting_pay_matrix_csv)
-    # Convert column names to string for consistency
-    current_pay_matrix.columns = current_pay_matrix.columns.map(str)
-
-    # Pay Commissions Validation
-    if pay_commission_implement_years is None:
-        pay_commission_implement_years = [2026, 2036, 2046, 2056, 2066]
-    # Use default fitment factor = 2 if none provided
+    current_pay_matrix = load_csv_into_df(present_pay_matrix_csv)
+    
+    # -------- V A L I D A T I O N S --------
+    # Validation -- #fitment factors == #pay commissions
     if fitment_factors is None:
+        # Use default fitment factor = 2 if none provided
         fitment_factors = [2] * len(pay_commission_implement_years)
     else:
         if len(fitment_factors) != len(pay_commission_implement_years):
             raise ValueError("Number of fitment factors must match number of pay commission implementation years.")
-
-    # Extracting Year in which joined service from Date of Joining of Service, and year of retirement
-    service_joining_year = parse_date(doj).year
-    service_joining_month = parse_date(doj).month
-    # If joined after 1st July, start counting from next year onwards, else count half year
-    service_joining_year += 1 if service_joining_month > 6 else 0.5
-    retirement_year = get_retirement_date(dob).year  
-    retirement_month = get_retirement_date(dob).month   
-    # If retirement after 1st July, additional increment applicable
-    retirement_year += 0.5 if retirement_month > 6 else 0 
-    max_service_years = retirement_year - service_joining_year
-
-    # Present pay level, etc
-    level = str(starting_level)
-    year = starting_year_in_level
-    progression = []
-
     # Validate Present Level
     levels = list(current_pay_matrix.columns)
-    if level not in levels:
-        raise ValueError(f"Invalid pay level: {level}")
+    if str(starting_level) not in levels:
+        raise ValueError(f"Invalid pay level: {str(starting_level)}")
     # Calculate max number of possible promotions
-    current_index = levels.index(level)
-    if is_ias and '13A' in levels and level == '13':
+    current_index = levels.index(str(starting_level))
+    if is_ias and '13A' in levels and str(starting_level) == '13':
         max_promotions = len(levels) - current_index - 2
     else:
         max_promotions = len(levels) - current_index - 1
-    # Check if promotion_years_array has more no of promotions than possible
-    if len(promotion_years_array) > max_promotions:
+    # Validate if promotion_years_array has more no of promotions than possible
+    if len(promotion_duration_array) > max_promotions:
         raise ValueError(
-            f"Too many promotions requested: only {max_promotions} promotions possible from Level {level}, "
-            f"but got {len(promotion_years_array)} promotion steps."
+            f"Too many promotions requested: only {max_promotions} promotions possible from Level {str(starting_level)}, "
+            f"but got {len(promotion_duration_array)} promotion steps."
         )
 
+    # ----------- M A I N ---- L O G I C -----------
+    # Extracting Year in which joined service from Date of Joining of Service, and year of retirement
+    service_joining_year, service_joining_month = parse_date(doj).year, parse_date(doj).month
+    retirement_year, retirement_month = get_retirement_date(dob).year, get_retirement_date(dob).month
+    # Years in which next promotion is due - cumulatively add promotion durations to service joining year
+    promotion_due_years_array = list(accumulate(promotion_duration_array, initial=service_joining_year))[1:]
+    # If joined after 1st July, start counting from next year onwards, else count half year
+    service_joining_year += 0.5 if service_joining_month > 6 else 0
+    # If retirement after 1st July, additional increment applicable, thus count additional half year
+    retirement_year += 0.5 if retirement_month > 6 else 0
+    # Max years to serve --> loop will run for this many years
+    max_service_years = retirement_year - service_joining_year
+    
+    # Starting pay level, etc  --> updated after each loop
+    pay_level = str(starting_level)
+    year_row_in_current_pay_level = starting_year_in_level
+    basic_pay = current_pay_matrix[pay_level].iloc[year_row_in_current_pay_level - 1]       # since 1st row is taken as label (in 'df') 
+
     # Data to be updated in each loop
-    basic_pay = current_pay_matrix[level].iloc[year - 1]
-    current_service_year = 0
-    level_index = 0                     # Tracks position in promotion_years_array
-    years_in_current_level = 0
-    pay_commission_index = 0            # Index of pay_commission_implement_years
-    present_pay_comm_no = extract_cpc_no_from_filename(starting_pay_matrix_csv); # 7
+    promotion_yr_array_index, pay_commission_index = 0, 0                                   # Tracks index of arrays
+    current_service_duration = 0                                                            # Tracks years spent in service
+    present_pay_comm_no = extract_cpc_no_from_filename(present_pay_matrix_csv)
+    
+    # The main object, returned at the end
+    progression = []
+    # so that these variables can be used in the loop, and changing key name can be done in one place
+    key_level, key_yr_row_in_level, key_basic_pay = 'Level', 'Year Row in Level', 'Basic Pay'
+    key_year, key_years_of_service = 'Years of Service', 'Year'
 
-    # FOR: Year -> 2026 (8th CPC year)
-    while current_service_year <= max_service_years:
-        # If joined before 31st Dec, count for increment
-        # Join month > 7 (joined after july) --> initial half of that year -- no service
-        # Join month b/w 1 & 6 (joined between Jan to June) --> initial half -- service, but no increment that year
+    # -------------- L O O P --------------
+    while current_service_duration <= max_service_years:
+        # Initialise dictionary with default values 
+        half_year_service_details = {}
+        # auto updated by functions, no need to manually update (used in case where service duration < 6 months)
+        half_year_service_details[key_level] = pay_level
+        half_year_service_details[key_yr_row_in_level] = year_row_in_current_pay_level
+        half_year_service_details[key_basic_pay] = int(basic_pay)
 
-        service_year = service_joining_year + current_service_year
-        current_service_year += 0.5
-        years_in_current_level += 1 if service_year % 1 == 0.5 else 0
+        # Tracks current year (such as 2024, 2024.5, 2025, 2025.5, etc)
+        year = service_joining_year + current_service_duration
 
-        # Record current state
-        progression.append({
-            "Years of Service": current_service_year,
-            "Year": service_year,
-            "Level": level,
-            "Year in Level": year,
-            "Basic Pay": basic_pay
-        })
+        # LOGIC:
+        # Increment -- only in middle of year -- ie. year ends with x.5
+        # Promotion -- only when year ends -- ie. year ends with x.0
+        # Pay Comm -- only when year ends -- only in those years applicable
 
-        # ----------------- PAY COMMISSION -----------------
-        # Apply new pay commission if due nexy year - so that new pay matrix are used for next year
-        # apply in 2025 (not in 2026)                                              2025==2026-1
-        if pay_commission_index < len(pay_commission_implement_years) and service_year == pay_commission_implement_years[pay_commission_index]-1:
-            fit_factor = fitment_factors[pay_commission_index]
-            next_pay_comm_no = present_pay_comm_no + 1 # Eg. 8 = 7 + 1;  9 = 8 + 1
-            next_pay_comm_fileName = f"{next_pay_comm_no}th_CPC_fitment_factor_{fit_factor}.csv"
+        # Increment --> only during year mid [1st July -> year ending with x.5]
+        if year % 1 == 0.5 and current_service_duration >=0.5:
+            # Increment function applies
+            pay_level, year_row_in_current_pay_level, basic_pay = annual_increment(pay_level, year_row_in_current_pay_level, pay_matrix_df=current_pay_matrix)
+            # Add variables in dictionary after increment
+            half_year_service_details[key_level] = pay_level
+            half_year_service_details[key_yr_row_in_level] = year_row_in_current_pay_level
+            half_year_service_details[key_basic_pay] = int(basic_pay)
 
-            # If csv exists, load it, if not, prepare it & load
-            if os.path.exists(next_pay_comm_fileName):
-                current_pay_matrix = pd.read_csv(next_pay_comm_fileName)
-            else:
-                current_pay_matrix = generate_next_pay_commission(present_pay_matrix_csv=starting_pay_matrix_csv, fitment_factor=fit_factor)
+        # Promotion and Pay Commission --> only during year end [1st Jan -> year ending with x.0]
+        if year % 1 != 0.5:
+            # Pay Commission --> only in the years it is implemented [given in pay_commission_implement_years]
+            # Applied before Promotion, so that updated pay commission is used in the promotion
+            if year == pay_commission_implement_years[pay_commission_index] and pay_commission_index < len(pay_commission_implement_years):
+                # Variables to be used here
+                fit_factor = fitment_factors[pay_commission_index]
+                next_pay_comm_no = present_pay_comm_no + 1
+                next_pay_comm_fileName = f"{next_pay_comm_no}th_CPC_fitment_factor_{fit_factor}.csv"
+
+                # If csv exists, load it, if not, prepare it & load
+                if os.path.exists(next_pay_comm_fileName):
+                    current_pay_matrix = load_csv_into_df(next_pay_comm_fileName)
+                else:
+                    current_pay_matrix = generate_next_pay_commission(present_pay_matrix_csv=present_pay_matrix_csv, fitment_factor=fit_factor)
+                
+                # Updating new basic pay according to the new pay commission
+                basic_pay = get_basic_pay(pay_level, year_row_in_current_pay_level, current_pay_matrix)
+                # Udating loop variables for when the next time pay commission is applicable
+                present_pay_matrix_csv = next_pay_comm_fileName
+                pay_commission_index += 1
+                present_pay_comm_no += 1    
             
-            # Update related fields
-            current_pay_matrix.columns = current_pay_matrix.columns.map(str)
-            starting_pay_matrix_csv = next_pay_comm_fileName
-            pay_commission_index += 1 # 1=0+1
-            present_pay_comm_no += 1 # 8=7+1
+            # Promotion --> apply only if further promotions exisis AND only in those years it is due [calc in promotion_due_years_array]
+            if promotion_yr_array_index < len(promotion_duration_array):                # Checking if further promotions are available
+                if year == promotion_due_years_array[promotion_yr_array_index]:         # Only in the years promotion is due
+                    # Promotion function applies
+                    pay_level, year_row_in_current_pay_level, basic_pay = promote_employee(pay_level, year_row_in_current_pay_level, pay_matrix_df=current_pay_matrix, is_ias=is_ias)
+                    # Udating loop variables for when the next time promotion is due
+                    promotion_yr_array_index += 1
             
-
-        # PROMOTION logic --> see if promotions available, and present year is equal to that in promtion yr array
-        if level_index < len(promotion_years_array) and years_in_current_level == promotion_years_array[level_index]:
-            # print('============ P R O M O T I O N ============')
-            # level, year, basic_pay = promote_employee(level, year, basic_pay, pay_matrix_csv=pay_matrix_csv, is_ias=is_ias)
-            level, year, basic_pay = promote_employee(level, year, pay_matrix_csv=starting_pay_matrix_csv, is_ias=is_ias)
-            # print(level, year, basic_pay)
-            # Update variables
-            years_in_current_level = 0
-            level_index += 1
-            continue  # skip increment on promotion year (continue ends loop here, next part of code is not run in this case)
+            # since the variables (pay_level, year_row, basic_pay) can be updated by both Pay Comn and Promotion, keeping it after those blocks
+            half_year_service_details[key_level] = pay_level
+            half_year_service_details[key_yr_row_in_level] = year_row_in_current_pay_level
+            half_year_service_details[key_basic_pay] = int(basic_pay)
         
-        # Increment -- > applicable only in July each year (ie. mid year), 
-        #                and must have atleast 6 months of service till 1st July that year
-        # print(current_service_year)
-        # if service_year % 1 == 0.5 and current_service_year >= 0.5:
-        if service_year % 1 == 0.5:
-            print(f'Increment Applicable => Year: {service_year}, Service Duration: {current_service_year}')
-            print(f'Previous Level-Year: {year}, Basic: {basic_pay}')
-            level, year, basic_pay = annual_increment(level, year, pay_matrix_csv=starting_pay_matrix_csv)
-            print(f'Next Level-Year: {year}, Basic: {basic_pay}')
-
+        # since the variables (year, service duration) are independent of increment, promotion & pay comm, keeping these outside those blocks
+        half_year_service_details[key_years_of_service] = current_service_duration
+        half_year_service_details[key_year] = year
+        progression.append(half_year_service_details)
+        # since loop is for six months, add 0.5 to service duration years
+        current_service_duration += 0.5
+    
     return progression
+
 
 
 
 # --- Example Usage ---
 if __name__ == "__main__":
-    progression = career_progression(starting_level=10, starting_year_in_level=1, promotion_years_array=[4, 5, 4, 1, 4, 7, 5, 3], 
-                       starting_pay_matrix_csv='7th_CPC.csv', dob='20/05/1996', doj='9/12/24', is_ias=False,
+    progression = career_progression(starting_level=10, starting_year_in_level=1, promotion_duration_array=[4, 5, 4, 1, 4, 7, 5], 
+                       present_pay_matrix_csv='7th_CPC.csv', dob='20/07/1999', doj='9/10/24', is_ias=True,
                        pay_commission_implement_years=[2026, 2036, 2046, 2056, 2066], fitment_factors=[2, 2, 2, 2, 2])
 
     for year in progression:
         print(year)
-
-    # print(len(progression))
 

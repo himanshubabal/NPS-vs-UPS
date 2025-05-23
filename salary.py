@@ -4,8 +4,8 @@ from helper_functions import *
 
 from typing import Union
 
-def get_salary_matrix(starting_level:Union[int,str] = 10, starting_year_in_level:int = 1, promotion_years_array:list[int] = [4, 5, 4, 1, 4, 7, 5, 3], 
-                       starting_pay_matrix_csv:str = '7th_CPC.csv', dob:str = '20/5/1996', doj:str = '9/12/24', is_ias:bool = False,
+def get_salary_matrix(starting_level:Union[int,str] = 10, starting_year_in_level:int = 1, promotion_duration_array:list[int] = [4, 5, 4, 1, 4, 7, 5, 3], 
+                       present_pay_matrix_csv:str = '7th_CPC.csv', dob:str = '20/5/1996', doj:str = '9/12/24', is_ias:bool = False,
                        pay_commission_implement_years:list[int] = [2026, 2036, 2046, 2056, 2066], fitment_factors:list[int] = [2, 2, 2, 2, 2],
                        initial_inflation_rate:float = 7.0, final_inflation_rate:float = 3.0):
     
@@ -23,7 +23,7 @@ def get_salary_matrix(starting_level:Union[int,str] = 10, starting_year_in_level
     duration_years = retire_date_parsed.year - joining_date_parsed.year
 
     career_progression_matrix = career_progression(starting_level=starting_level, starting_year_in_level=starting_year_in_level, 
-                                                   promotion_years_array=promotion_years_array, starting_pay_matrix_csv=starting_pay_matrix_csv, 
+                                                   promotion_duration_array=promotion_duration_array, present_pay_matrix_csv=present_pay_matrix_csv, 
                                                    dob=dob, doj=doj, is_ias=is_ias, pay_commission_implement_years=pay_commission_implement_years, 
                                                    fitment_factors=fitment_factors)
 
