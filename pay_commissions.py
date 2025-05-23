@@ -389,6 +389,5 @@ if __name__ == "__main__":
     #                    pay_commission_implement_years=[2026, 2036, 2046, 2056, 2066], fitment_factors=[2, 2, 2, 2, 2])
     progression = career_progression() 
 
-    for year in progression:
-        print(year)
+    pprint.pprint(progression)
 

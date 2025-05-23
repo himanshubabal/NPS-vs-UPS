@@ -47,7 +47,7 @@ def career_progression_new(starting_level=10, starting_year_in_level=1, promotio
 
     # ----------- M A I N ---- L O G I C -----------
     # Extracting Year in which joined service from Date of Joining of Service, and year of retirement
-    service_joining_year, service_joining_month = parse_date(doj).year, parse_date(doj).month
+    service_joining_year, service_joining_month = parse_date_old(doj).year, parse_date_old(doj).month
     retirement_year, retirement_month = get_retirement_date(dob).year, get_retirement_date(dob).month
     # Years in which next promotion is due - cumulatively add promotion durations to service joining year
     promotion_due_years_array = list(accumulate(promotion_duration_array, initial=service_joining_year))[1:]
@@ -177,8 +177,8 @@ def career_progression_old(starting_level=10, starting_year_in_level=1, promotio
             raise ValueError("Number of fitment factors must match number of pay commission implementation years.")
 
     # Extracting Year in which joined service from Date of Joining of Service, and year of retirement
-    service_joining_year = parse_date(doj).year
-    service_joining_month = parse_date(doj).month
+    service_joining_year = parse_date_old(doj).year
+    service_joining_month = parse_date_old(doj).month
     # If joined after 1st July, start counting from next year onwards, else count half year
     service_joining_year += 1 if service_joining_month > 6 else 0.5
     retirement_year = get_retirement_date(dob).year  
