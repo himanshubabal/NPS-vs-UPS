@@ -306,7 +306,7 @@ def career_progression(starting_level=10, starting_year_in_level=1, promotion_du
     progression = []
     # so that these variables can be used in the loop, and changing key name can be done in one place
     key_level, key_yr_row_in_level, key_basic_pay = 'Level', 'Year Row in Level', 'Basic Pay'
-    key_year, key_years_of_service = 'Years of Service', 'Year'
+    key_year, key_years_of_service = 'Year', 'Years of Service'
 
     # -------------- L O O P --------------
     while current_service_duration <= max_service_years:
@@ -384,9 +384,10 @@ def career_progression(starting_level=10, starting_year_in_level=1, promotion_du
 
 # --- Example Usage ---
 if __name__ == "__main__":
-    progression = career_progression(starting_level=10, starting_year_in_level=1, promotion_duration_array=[4, 5, 4, 1, 4, 7, 5], 
-                       present_pay_matrix_csv='7th_CPC.csv', dob='20/07/1999', doj='9/10/24', is_ias=True,
-                       pay_commission_implement_years=[2026, 2036, 2046, 2056, 2066], fitment_factors=[2, 2, 2, 2, 2])
+    # progression = career_progression(starting_level=10, starting_year_in_level=1, promotion_duration_array=[4, 5, 4, 1, 4, 7, 5], 
+    #                    present_pay_matrix_csv='7th_CPC.csv', dob='20/07/1999', doj='9/10/24', is_ias=True,
+    #                    pay_commission_implement_years=[2026, 2036, 2046, 2056, 2066], fitment_factors=[2, 2, 2, 2, 2])
+    progression = career_progression() 
 
     for year in progression:
         print(year)
