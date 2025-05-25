@@ -73,8 +73,19 @@ def load_csv_into_df(csv_path : str):
     df_loaded.columns = df_loaded.columns.map(str)
     return df_loaded
 
-
-
+# Default values for E, C, G and their tapering period
+def get_default_interes_rate_tapering_dict():
+    interest_rate_tapering_dict = {}
+    interest_rate_tapering_dict['E'], interest_rate_tapering_dict['C'], interest_rate_tapering_dict['G'] = {}, {}, {}
+    interest_rate_tapering_dict['Taper Period'] = 40
+    interest_rate_tapering_dict['E']['initial'] = 12.0
+    interest_rate_tapering_dict['E']['final'] = 6.0
+    interest_rate_tapering_dict['C']['initial'] = 8.0
+    interest_rate_tapering_dict['C']['final'] = 4.0
+    interest_rate_tapering_dict['G']['initial'] = 8.0
+    interest_rate_tapering_dict['G']['final'] = 4.0
+    
+    return interest_rate_tapering_dict
 
 
 

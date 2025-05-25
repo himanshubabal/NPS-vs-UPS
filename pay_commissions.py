@@ -250,8 +250,9 @@ def generate_next_pay_commission(present_pay_matrix_csv='7th_CPC.csv',
 
 
 # Career journey -> defined through given promotions (level/which prom, year of prom)
-def career_progression(starting_level=10, starting_year_in_level=1, promotion_duration_array=[4, 5, 4, 1, 4, 7, 5, 3], 
-                       present_pay_matrix_csv='7th_CPC.csv', dob='20/07/1999', doj='9/10/24', is_ias=False,
+def career_progression(starting_level=10, starting_year_row_in_level=1, promotion_duration_array=[4, 5, 4, 1, 4, 7, 5, 3], 
+                       present_pay_matrix_csv='7th_CPC.csv', early_retirement:bool = False,
+                       dob='20/07/1999', doj='9/10/24', dor:str = None, is_ias=False,
                        pay_commission_implement_years=[2026, 2036, 2046, 2056, 2066], fitment_factors=[2, 2, 2, 2, 2]):
     """
     Simulates career progression with annual increments and level promotions
@@ -285,11 +286,16 @@ def career_progression(starting_level=10, starting_year_in_level=1, promotion_du
             f"Too many promotions requested: only {max_promotions} promotions possible from Level {str(starting_level)}, "
             f"but got {len(promotion_duration_array)} promotion steps."
         )
+    if early_retirement and dor is None:
+        raise ValueError('If retiring early, must provide Date of Retirement')
 
     # ----------- M A I N ---- L O G I C -----------
     # Extracting Year in which joined service from Date of Joining of Service, and year of retirement
     service_joining_year, service_joining_month = parse_date(doj).year, parse_date(doj).month
-    retirement_year, retirement_month = get_retirement_date(dob).year, get_retirement_date(dob).month
+    if early_retirement:
+        retirement_year, retirement_month = parse_date(dor).year, parse_date(dor).month
+    else:
+        retirement_year, retirement_month = get_retirement_date(dob).year, get_retirement_date(dob).month
     # Years in which next promotion is due - cumulatively add promotion durations to service joining year
     promotion_due_years_array = list(accumulate(promotion_duration_array, initial=service_joining_year))[1:]
     # If joined after 1st July, start counting from next year onwards, else count half year
@@ -301,7 +307,7 @@ def career_progression(starting_level=10, starting_year_in_level=1, promotion_du
     
     # Starting pay level, etc  --> updated after each loop
     pay_level = str(starting_level)
-    year_row_in_current_pay_level = starting_year_in_level
+    year_row_in_current_pay_level = starting_year_row_in_level
     basic_pay = current_pay_matrix[pay_level].iloc[year_row_in_current_pay_level - 1]       # since 1st row is taken as label (in 'df') 
 
     # Data to be updated in each loop
@@ -392,7 +398,7 @@ if __name__ == "__main__":
     # progression = career_progression(starting_level=10, starting_year_in_level=1, promotion_duration_array=[4, 5, 4, 1, 4, 7, 5], 
     #                    present_pay_matrix_csv='7th_CPC.csv', dob='20/07/1999', doj='9/10/24', is_ias=True,
     #                    pay_commission_implement_years=[2026, 2036, 2046, 2056, 2066], fitment_factors=[2, 2, 2, 2, 2])
-    progression = career_progression(is_ias=True) 
+    progression = career_progression(is_ias=True, early_retirement=True, dor='10/4/30') 
 
     pprint.pprint(progression)
 

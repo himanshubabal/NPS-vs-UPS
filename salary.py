@@ -8,29 +8,35 @@ from typing import Union
 from calendar import monthrange
 
 
-def get_salary_matrix(starting_level:Union[int,str] = 10, starting_year_in_level:int = 1, promotion_duration_array:list[int] = [4, 5, 4, 1, 4, 7, 5, 3], 
-                       present_pay_matrix_csv:str = '7th_CPC.csv', dob:str = '20/5/1996', doj:str = '9/12/24', is_ias:bool = False,
-                       pay_commission_implement_years:list[int] = [2026, 2036, 2046, 2056, 2066], fitment_factors:list[int] = [2, 2, 2, 2, 2],
-                       initial_inflation_rate:float = 7.0, final_inflation_rate:float = 3.0):
+def get_salary_matrix(starting_level:Union[int,str] = 10, starting_year_row_in_level:int = 1, promotion_duration_array:list[int] = [4, 5, 4, 1, 4, 7, 5, 3], 
+                       present_pay_matrix_csv:str = '7th_CPC.csv', pay_commission_implement_years:list[int] = [2026, 2036, 2046, 2056, 2066], fitment_factors:list[int] = [2, 2, 2, 2, 2],
+                       dob:str = '20/5/1996', doj:str = '9/12/24', early_retirement:bool = False, dor:str = None, is_ias:bool = False,
+                       initial_inflation_rate:float = 7.0, final_inflation_rate:float = 3.0, taper_period_yrs:int=40):
     
     # Get dates parsed in easy to use format
     joining_date_parsed = parse_date(doj)
-    retire_date_parsed = get_retirement_date(dob)
+    # If retiring early, get Date of Retirement (dor) from user input
+    if early_retirement:
+        if dor is None:
+            raise ValueError('If retiring early, must provide Date of Retirement')
+        else:
+            retire_date_parsed = parse_date(dor)
+    else:   # Else retire at the age of 60
+        retire_date_parsed = get_retirement_date(dob, retirement_age=60)
 
     # Changing joining_year according to joining_date's month
     # If joined before 1st July, add nothing;    # If joined after 1st July, add 0.5
     joining_year = joining_date_parsed.year + 0.5 if joining_date_parsed.month > 7 else joining_date_parsed.year
-    duration_years = retire_date_parsed.year - joining_date_parsed.year
 
     # Get Career Progression
-    career_progression_matrix = career_progression(starting_level=starting_level, starting_year_in_level=starting_year_in_level, 
+    career_progression_matrix = career_progression(starting_level=starting_level, starting_year_row_in_level=starting_year_row_in_level, 
                                                    promotion_duration_array=promotion_duration_array, present_pay_matrix_csv=present_pay_matrix_csv, 
-                                                   dob=dob, doj=doj, is_ias=is_ias, pay_commission_implement_years=pay_commission_implement_years, 
-                                                   fitment_factors=fitment_factors)
+                                                   dob=dob, doj=doj, is_ias=is_ias, early_retirement=early_retirement, dor=dor,
+                                                   pay_commission_implement_years=pay_commission_implement_years, fitment_factors=fitment_factors)
 
     # Get DA
     da_matrix = get_DA_matrix(initial_inflation_rate=initial_inflation_rate, final_inflation_rate=final_inflation_rate, 
-                              duration_years=duration_years, joining_year=joining_year, pay_commission_implement_years=pay_commission_implement_years)
+                              taper_period_yrs=taper_period_yrs, joining_year=joining_year, pay_commission_implement_years=pay_commission_implement_years)
     
     # Get 6-monthly salary
     salary_matrix = {}
@@ -45,25 +51,21 @@ def get_salary_matrix(starting_level:Union[int,str] = 10, starting_year_in_level
         # Input data - for key 'year', give value 'salary'
         salary_matrix[year] = salary
 
-    # Init empty dictionary for years in range joining year to retire year
-    # salary_monthly_detailed_matrix = {year: {} for year in range(joining_date_parsed.year, retire_date_parsed.year+1)}
-    # for year, six_monthly_salary in salary_matrix.items():
-    #     month_dict = {}
-    #     if year % 1 == 0.5:     # year ending with 0.5
-    #         month_dict = {key: six_monthly_salary for key in range(7,13)}
-    #     if year % 1 != 0.5:
-    #         month_dict = {key: six_monthly_salary for key in range(1,7)}
-        
-    #     salary_monthly_detailed_matrix[int(year)].update(month_dict)
-
     return salary_matrix
 
-def get_monthly_salary(salary_matrix:dict=None, dob:str = '20/5/1996', doj:str = '9/12/24'):
+def get_monthly_salary(salary_matrix:dict=None, dob:str = '20/5/1996', doj:str = '9/12/24', early_retirement:bool = False, dor:str = None):
     if salary_matrix is None:
         salary_matrix = get_salary_matrix()
     # Imp dates
     joining = parse_date(doj)
-    retirement = get_retirement_date(dob)
+    # If retiring early, get Date of Retirement (dor) from user input
+    if early_retirement:
+        if dor is None:
+            raise ValueError('If retiring early, must provide Date of Retirement')
+        else:
+            retirement = parse_date(dor)
+    else:   # Else retire at the age of 60
+        retirement = get_retirement_date(dob, retirement_age=60)
 
     # Init empty dictionary for years in range joining year to retire year
     salary_monthly_detailed_matrix = {year: {} for year in range(int(joining.year), int(retirement.year)+1)}
@@ -90,14 +92,12 @@ def get_monthly_salary(salary_matrix:dict=None, dob:str = '20/5/1996', doj:str =
                     days_in_month = monthrange(year, month)[1]
                     served_days = days_in_month - joining.day + 1
                     adjusted_salary = int(six_monthly_salary * (served_days / days_in_month))
-                    print(f'Year: {year}, Month: {month}, Days Served: {served_days}/{days_in_month}, Salary: {adjusted_salary}')
 
                 # Adjust last month salary proportionally to days served
                 if year == retirement.year and month == retirement.month:
                     days_in_month = monthrange(year, month)[1]
                     served_days = retirement.day
                     adjusted_salary = int(six_monthly_salary * (served_days / days_in_month))
-                    print(f'Year: {year}, Month: {month}, Days Served: {served_days}/{days_in_month}, Salary: {adjusted_salary}')
 
             month_dict[month] = adjusted_salary
         
@@ -107,8 +107,8 @@ def get_monthly_salary(salary_matrix:dict=None, dob:str = '20/5/1996', doj:str =
     return salary_monthly_detailed_matrix
 
 if __name__ == "__main__":
-    salary_matrix = get_salary_matrix()
-    salary_monthly_detailed_matrix = get_monthly_salary(salary_matrix)
+    salary_matrix = get_salary_matrix(early_retirement=True, dor='10/4/30')
+    salary_monthly_detailed_matrix = get_monthly_salary(salary_matrix, early_retirement=True, dor='10/4/30')
 
     # pprint.pprint(salary_matrix)
     pprint.pprint(salary_monthly_detailed_matrix)

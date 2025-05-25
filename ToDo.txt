@@ -1,11 +1,11 @@
 DONE
 1. IAS -> skip L16 also
 2. in all methods where you input pay_comm_matric file name, input loaded pay matrix df
-
-TODO
 3. For every month, calculate contribution percentage (10+10 for UPS, 10+14 for NPS)
 4. Investment Options -> Auto (4: Standard/Default, LC25, LC50, LC75) and Active; their division among E, C, G wrt age also
 5. The returns applied / compounded at the end of every year
+
+TODO
 6. From 1st April onwards, UPS; before that -> consider NPS
 7. Option to add existing corpus also (till 1st April 2025)
 8. Calculation of delta with benchmark corpus, lumpsum, corpus, pension
