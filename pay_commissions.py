@@ -3,6 +3,8 @@ import numpy as np
 import re
 import os
 
+import pprint
+
 from itertools import accumulate
 from helper_functions import *
 
@@ -137,19 +139,24 @@ def promote_employee(current_level, year, pay_matrix_df, is_ias=False):
 
     # Step 2: identify next level
     curr_index = levels.index(current_level_str)
-
-    # IAS case: skip 13A if coming from 13, go directly to 14
-    if is_ias and current_level_str == '13':
-        next_level_index = levels.index('14') if '14' in levels else curr_index + 2
-    # IAS case: skip 16 if coming from 15, go directly to 17
-    elif is_ias and current_level_str == '15':
-        next_level_index = levels.index('17') if '17' in levels else curr_index + 2
+    
+    # IAS case: skip certain levels, and directly go to next-next level
+    levels_to_skip = ['13A', '16']
+    # Checking if we are already on last level, if not than only move forward
+    if curr_index + 1 < len(levels):
+        # If IAS, and If next level is to be skipped
+        if is_ias and levels[curr_index + 1] in levels_to_skip:
+            next_level_index = curr_index + 2
+        # If next level need not be skipped
+        else:
+            next_level_index = curr_index + 1
     else:
         next_level_index = curr_index + 1
     
     # Validating -> whether higher level even exists
+    # If not, keep in the same (highest) level
     if next_level_index >= len(levels):
-        raise ValueError(f"No promotable level beyond {current_level_str}")
+        next_level_index = len(levels) - 1
 
     # Step 2: Move to next level
     next_level = str(levels[next_level_index])
@@ -380,14 +387,12 @@ def career_progression(starting_level=10, starting_year_in_level=1, promotion_du
     return progression
 
 
-
-
 # --- Example Usage ---
 if __name__ == "__main__":
     # progression = career_progression(starting_level=10, starting_year_in_level=1, promotion_duration_array=[4, 5, 4, 1, 4, 7, 5], 
     #                    present_pay_matrix_csv='7th_CPC.csv', dob='20/07/1999', doj='9/10/24', is_ias=True,
     #                    pay_commission_implement_years=[2026, 2036, 2046, 2056, 2066], fitment_factors=[2, 2, 2, 2, 2])
-    progression = career_progression() 
+    progression = career_progression(is_ias=True) 
 
     pprint.pprint(progression)
 

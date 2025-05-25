@@ -1,5 +1,3 @@
-
-
 # Takes an initial value, a final value, and a duration
 # Than linearly reduces fron initial to final value over the duration_periods
 def get_progressive_change_matrix(initial_rate, final_rate, divide_periods, increment_step):
@@ -72,6 +70,7 @@ def get_interest_matrix(initial_interest_rate: float = 12.0, final_interest_rate
 
     return final_interest_matrix
 
+
 if __name__ == "__main__":
     joining_year = 2024.0
     initial_rate = 7
@@ -85,5 +84,3 @@ if __name__ == "__main__":
     
     for i in da_matrix:
         print(f"Year: {i}, DA: {da_matrix[i]}, Interest: {int_matrix[i]}")
-
-# ToDo --> different lengths of the two matrix

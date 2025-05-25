@@ -58,7 +58,9 @@ def get_salary_matrix(starting_level:Union[int,str] = 10, starting_year_in_level
 
     return salary_matrix
 
-def get_monthly_salary(salary_matrix, dob:str = '20/5/1996', doj:str = '9/12/24'):
+def get_monthly_salary(salary_matrix:dict=None, dob:str = '20/5/1996', doj:str = '9/12/24'):
+    if salary_matrix is None:
+        salary_matrix = get_salary_matrix()
     # Imp dates
     joining = parse_date(doj)
     retirement = get_retirement_date(dob)

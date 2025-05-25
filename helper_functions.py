@@ -2,7 +2,6 @@ from datetime import datetime
 from datetime import date
 import pandas as pd
 import re
-import pprint
 
 # Inputs -> str: DD/MM/YYYY;  Output -> date format (out.year, out.month, out.day)
 def parse_date(date_str:str):
