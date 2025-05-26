@@ -1,6 +1,7 @@
 from datetime import datetime
 from datetime import date
 import pandas as pd
+import calendar
 import re
 
 # Inputs -> str: DD/MM/YYYY;  Output -> date format (out.year, out.month, out.day)
@@ -39,10 +40,27 @@ def get_retirement_date(dob_str:str, retirement_age:int=60):
     # dob = date(parsed.year, parsed.month, parsed.date)
     dob = date(parsed.year, parsed.month, parsed.day)
 
-    # Add 60 years — retirement is on the day before 60th birthday
-    retirement_date = date(dob.year + retirement_age, dob.month, dob.day)
+    # # Add 60 years — retirement is on the day before 60th birthday
+    # retirement_date = date(dob.year + retirement_age, dob.month, dob.day)
+
+    # Calculate retirement year and month
+    retire_year = dob.year + retirement_age
+    retire_month = dob.month
+
+    # Get last day of retirement month
+    last_day = calendar.monthrange(retire_year, retire_month)[1]
+
+    # Retirement date is the last day of that month
+    retirement_date = date(retire_year, retire_month, last_day)
 
     return retirement_date
+
+# Used in LumpSum calculation of UPS
+def get_six_month_periods(initial_date: date, final_date: date) -> int:
+    """Returns number of 6-month periods between two dates (inclusive if exact match)."""
+    months_diff = (final_date.year - initial_date.year) * 12 + (final_date.month - initial_date.month)
+    six_month_periods = months_diff // 6 + 1  # +1 if you count starting period
+    return six_month_periods
 
 # Extracts Pay Commission Number from it's csv filename
 def extract_cpc_no_from_filename(filename: str) -> int:

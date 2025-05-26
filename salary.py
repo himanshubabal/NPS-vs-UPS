@@ -16,13 +16,15 @@ def get_salary_matrix(starting_level:Union[int,str] = 10, starting_year_row_in_l
     # Get dates parsed in easy to use format
     joining_date_parsed = parse_date(doj)
     # If retiring early, get Date of Retirement (dor) from user input
-    if early_retirement:
-        if dor is None:
-            raise ValueError('If retiring early, must provide Date of Retirement')
-        else:
-            retire_date_parsed = parse_date(dor)
-    else:   # Else retire at the age of 60
-        retire_date_parsed = get_retirement_date(dob, retirement_age=60)
+    if early_retirement and dor is None:
+        raise ValueError('If retiring early, must provide Date of Retirement')
+    # if early_retirement:
+    #     if dor is None:
+    #         raise ValueError('If retiring early, must provide Date of Retirement')
+    #     else:
+    #         retire_date_parsed = parse_date(dor)
+    # else:   # Else retire at the age of 60
+    #     retire_date_parsed = get_retirement_date(dob, retirement_age=60)
 
     # Changing joining_year according to joining_date's month
     # If joined before 1st July, add nothing;    # If joined after 1st July, add 0.5

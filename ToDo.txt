@@ -9,5 +9,5 @@ TODO
 6. From 1st April onwards, UPS; before that -> consider NPS
 7. Option to add existing corpus also (till 1st April 2025)
 8. Calculation of delta with benchmark corpus, lumpsum, corpus, pension
-9. Inflation adjust these all
+9. Inflation adjust these all (NPV, IRR/CAGR)
 10. Compare and contrast

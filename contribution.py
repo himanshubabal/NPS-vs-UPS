@@ -104,7 +104,8 @@ def get_final_corpus(scheme:int='UPS', investment_option:str = 'Auto_LC50', star
                     present_pay_matrix_csv:str = '7th_CPC.csv', is_ias:bool = False,
                     dob:str = '20/5/1996', doj:str = '9/12/24', early_retirement:bool = False, dor:str = None,
                     pay_commission_implement_years:list[int] = [2026, 2036, 2046, 2056, 2066], fitment_factors:list[int] = [2, 2, 2, 2, 2],
-                    initial_inflation_rate:float = 7.0, final_inflation_rate:float = 3.0, interest_rate_tapering_dict:dict=None):
+                    initial_inflation_rate:float = 7.0, final_inflation_rate:float = 3.0, taper_period_yrs:int=40, 
+                    interest_rate_tapering_dict:dict=None):
     if scheme not in ['NPS', 'UPS']:
         raise ValueError('Scheme chosen must be either NPS or UPS')
     if early_retirement and dor is None:
@@ -118,7 +119,7 @@ def get_final_corpus(scheme:int='UPS', investment_option:str = 'Auto_LC50', star
     salary_matrix = get_salary_matrix(starting_level=starting_level, starting_year_row_in_level=starting_year_row_in_level, promotion_duration_array=promotion_duration_array, 
                        present_pay_matrix_csv=present_pay_matrix_csv, dob=dob, doj=doj, is_ias=is_ias, early_retirement=early_retirement, dor=dor,
                        pay_commission_implement_years=pay_commission_implement_years, fitment_factors=fitment_factors,
-                       initial_inflation_rate=initial_inflation_rate, final_inflation_rate=final_inflation_rate)
+                       initial_inflation_rate=initial_inflation_rate, final_inflation_rate=final_inflation_rate, taper_period_yrs=taper_period_yrs)
     monthly_salary_detailed = get_monthly_salary(salary_matrix=salary_matrix, dob=dob, doj=doj, early_retirement=early_retirement, dor=dor,)
     yearly_contribution = get_yearly_contribution(monthly_salary_detailed=monthly_salary_detailed, employee_contrib_percent=employee_contrib_percent, govt_contrib_percent=govt_contrib_percent)
     yearly_corpus = get_yearly_corpus(yearly_contributions=yearly_contribution, dob=dob, doj=doj, early_retirement=early_retirement, dor=dor,
@@ -126,7 +127,8 @@ def get_final_corpus(scheme:int='UPS', investment_option:str = 'Auto_LC50', star
 
     final_corpus_amount = yearly_corpus[max(yearly_corpus)]
 
-    return (final_corpus_amount, yearly_corpus)
+    return (final_corpus_amount, yearly_corpus, monthly_salary_detailed)
+
 
 if __name__ == "__main__":
     # monthly_contribution = get_monthly_contribution()
@@ -138,5 +140,5 @@ if __name__ == "__main__":
     # yearly_corpus = get_yearly_corpus()
     # pprint.pprint(yearly_corpus)
 
-    final_corpus = get_final_corpus(scheme='NPS', is_ias=True, early_retirement=True, dor='10/8/30')
+    final_corpus = get_final_corpus(scheme='NPS', is_ias=True, early_retirement=True, dor='10/4/30')
     pprint.pprint(final_corpus)

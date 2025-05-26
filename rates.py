@@ -30,6 +30,8 @@ def get_DA_matrix(initial_inflation_rate: float = 7.0, final_inflation_rate: flo
                   joining_year:float=2024.0, joining_da:float=55, pay_commission_implement_years:list[int]=[2026, 2036, 2046, 2056, 2066]):
     # For duration years * 2 (so 6 monthly), increment of 6 months (hence increment_step of 0.5)
     inflation_matrix = get_progressive_change_matrix(initial_inflation_rate, final_inflation_rate, taper_period_yrs*2, 0.5)
+    # inflation_matrix = get_inflation_matrix(initial_inflation_rate = 12.0, final_inflation_rate = 6.0, 
+                                            # taper_period_yrs = 40, joining_year = 2024)
     # to handle pay commission, resetting DA to 0 every time new pay commission is applied
     pay_commission_index = 0
     current_da = 0
@@ -56,6 +58,17 @@ def get_DA_matrix(initial_inflation_rate: float = 7.0, final_inflation_rate: flo
 
     return da_matrix
 
+def get_inflation_matrix(initial_inflation_rate: float = 7.0, final_inflation_rate: float = 3.0, 
+                        taper_period_yrs: int = 40, joining_year: int = 2024):
+    inf_matrix = get_progressive_change_matrix(initial_inflation_rate, final_inflation_rate, taper_period_yrs*2, 0.5)
+
+    inflation_matrix = {}
+    inflation_matrix[joining_year] = initial_inflation_rate / 2.0
+
+    for period in inf_matrix:
+        inflation_matrix[joining_year + period + 0.5] = inf_matrix[period] / 2.0
+
+    return inflation_matrix
 
 def get_interest_matrix(initial_interest_rate: float = 12.0, final_interest_rate: float = 6.0, 
                         taper_period_yrs: int = 40, joining_year: int = 2024):
@@ -86,9 +99,13 @@ if __name__ == "__main__":
     
     da_matrix = get_DA_matrix()
     int_matrix = get_interest_matrix()
+    inflation_matrix = get_inflation_matrix()
 
 
     # for i in da_matrix:
     #     print(f"Year: {i}, DA: {da_matrix[i]}, Interest: {int_matrix[i]}")
 
     pprint.pprint (int_matrix)
+    pprint.pprint(da_matrix)    
+    pprint.pprint(inflation_matrix)
+    print(len(da_matrix), len(inflation_matrix))
