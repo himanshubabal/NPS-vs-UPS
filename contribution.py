@@ -5,7 +5,10 @@ from salary import *
 from helper_functions import *
 
 from typing import Union
+import numpy as np
 import pprint
+import xirr
+# from xirr import xirr
 
 def get_monthly_contribution(monthly_salary:int = 56100, employee_contrib_percent:float = 10, govt_contrib_percent:float = 10):
     '''Given a month's salary, and % contribution of employee & employer,
@@ -99,7 +102,7 @@ def get_yearly_corpus(yearly_contributions:dict = None, dob:str = '20/05/1996', 
     return corpus_at_year_end
 
 
-def get_final_corpus(scheme:int='UPS', investment_option:str = 'Auto_LC50', starting_level:Union[int,str] = 10, 
+def get_final_corpus(scheme:str='UPS', investment_option:str = 'Auto_LC50', starting_level:Union[int,str] = 10, 
                     starting_year_row_in_level:int = 1, promotion_duration_array:list[int] = [4, 5, 4, 1, 4, 7, 5, 3], 
                     present_pay_matrix_csv:str = '7th_CPC.csv', is_ias:bool = False,
                     dob:str = '20/5/1996', doj:str = '9/12/24', early_retirement:bool = False, dor:str = None,
@@ -128,7 +131,6 @@ def get_final_corpus(scheme:int='UPS', investment_option:str = 'Auto_LC50', star
     final_corpus_amount = yearly_corpus[max(yearly_corpus)]
 
     return (final_corpus_amount, yearly_corpus, monthly_salary_detailed)
-
 
 if __name__ == "__main__":
     # monthly_contribution = get_monthly_contribution()
