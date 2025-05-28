@@ -73,14 +73,14 @@ def get_monthly_salary(salary_matrix:dict=None, dob:str = '20/5/1996', doj:str =
     salary_monthly_detailed_matrix = {year: {} for year in range(int(joining.year), int(retirement.year)+1)}
     for year, six_monthly_salary in salary_matrix.items():
         month_dict = {}
-        
+
         # Getting month list for given half-year
         if year % 1 == 0.5:
             months_range = range(7, 13)  # Second half -- year ending with 0.5 -> means second half of year -> month 7 to 12
         else:
             months_range = range(1, 7)   # First half -- year ending with 0.0 -> means first half of year -> month 1 to 6
 
-        # Since only integer part (0.5 removed) is required from hereon
+        # Since only integer part (0.5 removed) is required from here on
         year = int(year)
         for month in months_range:
             # Check if month is before joining month in joining year or after retirement month in retirement year, make their salary zero
@@ -96,17 +96,21 @@ def get_monthly_salary(salary_matrix:dict=None, dob:str = '20/5/1996', doj:str =
                     adjusted_salary = int(six_monthly_salary * (served_days / days_in_month))
 
                 # Adjust last month salary proportionally to days served
-                if year == retirement.year and month == retirement.month:
-                    days_in_month = monthrange(year, month)[1]
-                    served_days = retirement.day
-                    adjusted_salary = int(six_monthly_salary * (served_days / days_in_month))
+                # NOT REQUIRED -> since retirement happens on last day of the month ONLY
+                # if year == retirement.year and month == retirement.month:
+                #     days_in_month = monthrange(year, month)[1]
+                #     served_days = retirement.day
+                #     adjusted_salary = int(six_monthly_salary * (served_days / days_in_month))
 
             month_dict[month] = adjusted_salary
         
         # Add months dict as value for year key (int makes year round off)
-        salary_monthly_detailed_matrix[year].update(month_dict)
+        # [only if key exists -> can happen if doj is later than that of when salary_matrix was generated]
+        if year in salary_monthly_detailed_matrix:
+            salary_monthly_detailed_matrix[year].update(month_dict)
     
     return salary_monthly_detailed_matrix
+
 
 if __name__ == "__main__":
     salary_matrix = get_salary_matrix(early_retirement=True, dor='10/4/30')

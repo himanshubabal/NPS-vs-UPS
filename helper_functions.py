@@ -1,5 +1,6 @@
 from datetime import datetime
 from datetime import date
+from dateutil.relativedelta import relativedelta
 import pandas as pd
 import calendar
 import re
@@ -24,7 +25,7 @@ def parse_date(date_str:str):
     for fmt in formats:
         try:
             dt = datetime.strptime(date_str.strip(), fmt)
-            return dt
+            return dt.date()
         except ValueError:
             continue
     
@@ -61,6 +62,11 @@ def get_six_month_periods(initial_date: date, final_date: date) -> int:
     months_diff = (final_date.year - initial_date.year) * 12 + (final_date.month - initial_date.month)
     six_month_periods = months_diff // 6 + 1  # +1 if you count starting period
     return six_month_periods
+
+# Get months difference among two dates (since less than 25 yr/300 month service reduces pension)
+def get_month_difference(start_date, end_date):
+    diff = relativedelta(end_date, start_date)
+    return abs(int(diff.years * 12 + diff.months))
 
 # Extracts Pay Commission Number from it's csv filename
 def extract_cpc_no_from_filename(filename: str) -> int:

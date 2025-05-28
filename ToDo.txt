@@ -4,11 +4,14 @@ DONE
 3. For every month, calculate contribution percentage (10+10 for UPS, 10+14 for NPS)
 4. Investment Options -> Auto (4: Standard/Default, LC25, LC50, LC75) and Active; their division among E, C, G wrt age also
 5. The returns applied / compounded at the end of every year
-
-TODO
 6. From 1st April onwards, UPS; before that -> consider NPS
 7. Option to add existing corpus also (till 1st April 2025)
-8. Calculation of delta with benchmark corpus, lumpsum, corpus, pension
 9. Inflation adjust these all (NPV, IRR/CAGR)
+
+TODO
+
+8. Calculation of delta with benchmark corpus, lumpsum, corpus, pension
 10. Compare and contrast
 11. Also chart pension after retirement, say upto age 80 (ie. net benefit the longer the pensioner lives)
+    In this, also do that in NPS -> you get the 40% annuity amount back after pension ends
+    hence consider full picture, with all amounts 
