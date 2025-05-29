@@ -7,8 +7,7 @@ from helper_functions import *
 from typing import Union
 import numpy as np
 import pprint
-import xirr
-# from xirr import xirr
+
 
 def get_monthly_contribution(monthly_salary:int = 56100, employee_contrib_percent:float = 10, govt_contrib_percent:float = 10):
     '''Given a month's salary, and % contribution of employee & employer,
