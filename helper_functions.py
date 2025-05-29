@@ -96,6 +96,7 @@ def load_csv_into_df(csv_path : str):
     df_loaded = pd.read_csv(csv_path)
     # Convert column names to string for consistency
     df_loaded.columns = df_loaded.columns.map(str)
+    # df_loaded.set_index(df_loaded.columns[0])
     return df_loaded
 
 # NPV (Net Present Value): value of future amount in present term -> basically inflation adjusted value
@@ -134,3 +135,5 @@ def auto_pass_arguments_to_function(sub_function, **kwargs):
     }
     return sub_function(**accepted_args)
 
+def convert_dt_to_string(dt:date):
+    return dt.strftime('%d/%m/%y')
