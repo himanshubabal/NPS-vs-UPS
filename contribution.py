@@ -148,31 +148,6 @@ def get_final_corpus(scheme:str='UPS', investment_option:str = 'Auto_LC50', star
     return (final_corpus_amount, yearly_corpus, monthly_salary_detailed)
 
 
-# def take_earlier_corpus_amt_upto_1st_april(corpus_upto_1st_april:int, salary_matrix:dict, scheme:str='UPS', dob:str='20/05/1996', early_retirement:bool=False, dor:str=None):
-#     if scheme not in ['NPS', 'UPS']:
-#         raise ValueError('Scheme chosen must be either NPS or UPS')
-#     if early_retirement and dor is None:
-#         raise ValueError('If retiring early, must provide Date of Retirement')
-    
-#     new_doj = '01/04/2025'
-#     govt_contrib_percent = 10 if scheme == 'UPS' else 14
-#     employee_contrib_percent = 10
-
-#     new_doj_parsed = parse_date(new_doj)
-#     print(new_doj_parsed)
-#     pprint.pprint(salary_matrix)
-
-#     monthly_salary_detailed = get_monthly_salary(salary_matrix=salary_matrix, dob=dob, doj=new_doj, early_retirement=early_retirement, dor=dor)
-#     print('Monthly Salary Detailed')
-#     # pprint.pprint(monthly_salary_detailed)
-
-#     yearly_contribution = get_yearly_contribution(monthly_salary_detailed=monthly_salary_detailed, employee_contrib_percent=employee_contrib_percent, govt_contrib_percent=govt_contrib_percent,
-#                                                   take_earlier_corpus_into_account = True, earlier_corpus = corpus_upto_1st_april)
-#     print('Yearly Contributions')
-#     pprint.pprint(yearly_contribution)
-
-#     return yearly_contribution
-
 if __name__ == "__main__":
     yearly_contributions = get_yearly_contribution()
     # pprint.pprint(yearly_contributions)

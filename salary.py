@@ -55,6 +55,7 @@ def get_salary_matrix(starting_level:Union[int,str] = 10, starting_year_row_in_l
 
     return salary_matrix
 
+
 def get_monthly_salary(salary_matrix:dict=None, dob:str = '20/5/1996', doj:str = '9/12/24', early_retirement:bool = False, dor:str = None):
     if salary_matrix is None:
         salary_matrix = get_salary_matrix()

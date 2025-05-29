@@ -112,10 +112,6 @@ def get_ecg_matrix(investment_option:str = 'Auto_LC50', start_age:int = 20, end_
     return ecg_matrix
 
 
-# def 
-
-
-
 if __name__ == "__main__":
     # return_corpus = ecg_returns(100000)
 

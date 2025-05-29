@@ -58,6 +58,7 @@ def get_DA_matrix(initial_inflation_rate: float = 7.0, final_inflation_rate: flo
 
     return da_matrix
 
+
 def get_inflation_matrix(initial_inflation_rate: float = 7.0, final_inflation_rate: float = 3.0, 
                         taper_period_yrs: int = 40, joining_year: int = 2024):
     inf_matrix = get_progressive_change_matrix(initial_inflation_rate, final_inflation_rate, taper_period_yrs*2, 0.5)
@@ -69,6 +70,7 @@ def get_inflation_matrix(initial_inflation_rate: float = 7.0, final_inflation_ra
         inflation_matrix[joining_year + period + 0.5] = inf_matrix[period] / 2.0
 
     return inflation_matrix
+
 
 def get_interest_matrix(initial_interest_rate: float = 12.0, final_interest_rate: float = 6.0, 
                         taper_period_yrs: int = 40, joining_year: int = 2024):

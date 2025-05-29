@@ -270,16 +270,19 @@ def career_progression(starting_level=10, starting_year_row_in_level=1, promotio
     else:
         if len(fitment_factors) != len(pay_commission_implement_years):
             raise ValueError("Number of fitment factors must match number of pay commission implementation years.")
+    
     # Validate Present Level
     levels = list(current_pay_matrix.columns)
     if str(starting_level) not in levels:
         raise ValueError(f"Invalid pay level: {str(starting_level)}")
+    
     # Calculate max number of possible promotions
     current_index = levels.index(str(starting_level))
     if is_ias and '13A' in levels and str(starting_level) == '13':
         max_promotions = len(levels) - current_index - 2
     else:
         max_promotions = len(levels) - current_index - 1
+    
     # Validate if promotion_years_array has more no of promotions than possible
     if len(promotion_duration_array) > max_promotions:
         raise ValueError(
