@@ -1,33 +1,86 @@
+import streamlit as st
+import inspect
+import pprint
+
 from pension import *
+from pay_commissions import career_progression
+from salary import get_salary_matrix, get_monthly_salary
+from contribution import get_final_corpus
 
 
-def get_all_date(dob:str, doj:str)
+def input_data(scheme:str='UPS', investment_option:str = 'Auto_LC50', 
+                withdrawl_percentage:float = 60.00, annuity_rate:float = None, 
+                dob:str = '01/01/1996', doj:str = '10/10/2024', 
+                early_retirement:bool = False, dor:str = None, 
+                take_earlier_corpus_into_account:bool = False, earlier_corpus:int = None, earlier_corpus_end_date:str = None, 
+                govt_contrib_percent:float = None,  employee_contrib_percent:float = None, 
+                starting_level:Union[int,str] = 10, starting_year_row_in_level:int = 1, is_ias:bool = False, 
+                present_pay_matrix_csv:str = '7th_CPC.csv', promotion_duration_array:list[int] = [4, 5, 4, 1, 4, 7, 5, 3], 
+                pay_commission_implement_years:list[int] = [2026, 2036, 2046, 2056, 2066], fitment_factors:list[int] = [2, 2, 2, 2, 2], 
+                initial_inflation_rate:float = 7.0, final_inflation_rate:float = 3.0, 
+                initial_interest_rate: float = 12.0, final_interest_rate: float = 6.0, 
+                taper_period_yrs:int=40, pension_duration:int=40, 
+                E_initial:float = 12.0, E_final:float = 6.0,
+                C_initial:float = 8.0, C_final:float = 4.0,
+                G_initial:float = 8.0, G_final:float = 4.0
+                ):
+    
+    # Validate everything here
+
+
+    # 
+    interest_rate_tapering_dict = get_interest_rate_tapering_dict(E_initial=E_initial, E_final=E_final,
+                                                                C_initial=C_initial, C_final=C_final,
+                                                                G_initial=G_initial, G_final=G_final,
+                                                                taper_period_yrs=taper_period_yrs)
+
+    get_all_data(scheme = scheme, investment_option = investment_option, 
+                withdrawl_percentage = withdrawl_percentage, annuity_rate = annuity_rate, 
+                dob = dob, doj = doj, 
+                early_retirement = early_retirement, dor = dor, 
+                take_earlier_corpus_into_account = take_earlier_corpus_into_account, earlier_corpus = earlier_corpus, earlier_corpus_end_date = earlier_corpus_end_date, 
+                govt_contrib_percent = govt_contrib_percent,  employee_contrib_percent = employee_contrib_percent, 
+                starting_level = starting_level, starting_year_row_in_level = starting_year_row_in_level, is_ias = is_ias, 
+                present_pay_matrix_csv = present_pay_matrix_csv, promotion_duration_array = promotion_duration_array, 
+                pay_commission_implement_years = pay_commission_implement_years, fitment_factors = fitment_factors, 
+                initial_inflation_rate = initial_inflation_rate, final_inflation_rate = final_inflation_rate, 
+                initial_interest_rate = initial_interest_rate, final_interest_rate = final_interest_rate, 
+                taper_period_yrs = taper_period_yrs, pension_duration = pension_duration,
+                interest_rate_tapering_dict = interest_rate_tapering_dict)
+
+def get_all_data(**kwargs):
+    # career_progn = auto_pass_arguments_to_function(career_progression, **kwargs)
+    # pprint.pprint(career_progn)
+
+    # salary_matrix = auto_pass_arguments_to_function(get_salary_matrix, **kwargs)
+    # kwargs['salary_matrix'] = salary_matrix
+    # salary_monthly_detailed_matrix = auto_pass_arguments_to_function(get_monthly_salary, **kwargs)
+    # pprint.pprint(salary_matrix)
+    # pprint.pprint(salary_monthly_detailed_matrix)
+
+    final_corpus_amount, yearly_corpus, monthly_salary_detailed = auto_pass_arguments_to_function(get_final_corpus, **kwargs)
+    pprint.pprint(monthly_salary_detailed)
+    pprint.pprint(yearly_corpus)
+    print(final_corpus_amount)
+
+    kwargs['final_corpus_amount'] = final_corpus_amount
+    kwargs['monthly_salary_detailed'] = monthly_salary_detailed
+    withdraw_corpus, lumpsum_for_ups, adjusted_pension = auto_pass_arguments_to_function(get_final_amounts_all, **kwargs)
+    print(withdraw_corpus, lumpsum_for_ups, adjusted_pension)
+
+    kwargs['amount'] = final_corpus_amount
+    kwargs['adjusted_pension'] = adjusted_pension
+    npv = auto_pass_arguments_to_function(get_npv_for_given_inflation, **kwargs)
+    xirr_corpus = auto_pass_arguments_to_function(get_xirr, **kwargs)
+    future_pension_matrix = auto_pass_arguments_to_function(get_future_pension, **kwargs)
+    print(final_corpus_amount, npv)
+    print(xirr_corpus)
+    pprint.pprint(future_pension_matrix)
+
     None
 
 
 
+
 if __name__ == "__main__":
-    # Testing Variables
-    interest_rate_tapering_dict = get_default_interes_rate_tapering_dict()
-    final_corpus_amount, yearly_corpus, monthly_salary_detailed = get_final_amounts_all(scheme='UPS', investment_option='Auto_LC50', starting_level=10, 
-                                                        starting_year_row_in_level=1, promotion_duration_array=[4, 5, 4, 1, 4, 7, 5, 3], 
-                                                        present_pay_matrix_csv='7th_CPC.csv', is_ias=False,
-                                                        dob='20/5/1996', doj='9/12/24', early_retirement=False, dor=None,
-                                                        pay_commission_implement_years=[2026, 2036, 2046, 2056, 2066], fitment_factors=[2, 2, 2, 2, 2],
-                                                        initial_inflation_rate=7.0, final_inflation_rate=3.0, taper_period_yrs=40,
-                                                        interest_rate_tapering_dict=interest_rate_tapering_dict)
-    inflation_matrix = get_inflation_matrix(initial_inflation_rate = 7.0, final_inflation_rate = 3.0, 
-                                            taper_period_yrs = 40, joining_year = 2024)
-    withdraw_corpus, lumpsum_for_ups, adjusted_pension = get_final_amounts_all(final_corpus_amount, monthly_salary_detailed, scheme='UPS')
-    inflation_factor = get_inflation_factor(inflation_matrix, monthly_salary_detailed)
-    npv = get_npv(final_corpus_amount, inflation_factor)
-    xirr_corpus = get_xirr(final_corpus_amount, monthly_salary_detailed)
-
-    # pprint.pprint(monthly_salary_detailed)
-    # pprint.pprint(inflation_matrix)
-    print(withdraw_corpus, lumpsum_for_ups, adjusted_pension)
-    # pprint.pprint(inflation_factor)
-    # print(final_corpus_amount, npv)
-    # pprint.pprint(xirr_corpus)
-
-    pprint.pprint(get_future_pension(inflation_matrix, adjusted_pension=adjusted_pension, scheme='NPS', final_corpus_amount=final_corpus_amount*0.60, annuity_rate=6.0))
+    input_data()

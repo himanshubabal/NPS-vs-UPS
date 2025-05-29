@@ -26,7 +26,7 @@ def get_full_pension_amt_UPS(monthly_salary_detailed:dict):
     return pension_average_last_12_mnth
 
 # Gets -> withdraw_corpus, lumpsum_for_ups, adjusted_pension (given %withdrawl)
-def get_final_corpus_amounts_all(final_corpus_amount:int, monthly_salary_detailed:dict, dob:str='20/5/1996', doj:str='9/12/24', 
+def get_final_amounts_all(final_corpus_amount:int, monthly_salary_detailed:dict, dob:str='20/5/1996', doj:str='9/12/24', 
                           early_retirement:bool=False, dor:str=None, withdrawl_percentage:float = 60.00, scheme:str = 'UPS', annuity_rate:float = None):   
     # Validations
     if scheme not in ['NPS', 'UPS']:
@@ -50,7 +50,6 @@ def get_final_corpus_amounts_all(final_corpus_amount:int, monthly_salary_detaile
         full_pension_amt = get_full_pension_amt_UPS(monthly_salary_detailed)
         # If service less than 25 years (300 months), reduce pension prop
         months_served = get_month_difference(dor_parsed, doj_parsed)           # Months Served
-        print(months_served)
         if months_served < 300:
             full_pension_amt *= months_served / 300
     if scheme == 'NPS':
@@ -68,18 +67,19 @@ def get_final_corpus_amounts_all(final_corpus_amount:int, monthly_salary_detaile
     return (withdraw_corpus, lumpsum_for_ups, adjusted_pension)
 
 # Inflation over the period
-def get_inflation_factor(inflation_matrix:dict, monthly_salary_detailed:dict, doj:str='9/12/24'):
-    doj_parsed = parse_date(doj)
-
-    if doj_parsed.month <= 6:
-        None
-
+def get_inflation_factor(monthly_salary_detailed:dict, doj:str='9/12/24', 
+                        initial_inflation_rate = 7.0, final_inflation_rate = 3.0, taper_period_yrs = 40):
+    # ---------- LOGIC ---------
     # For 6 months period --> monthly
     # year = (1+yr rate)^no of years
     # 6 mnth = (1 + 6 mn rate) ^ no of 6 mn periods
     # 1 mnth = (1 + 1 mn rate) ^ no of months
     #   1 mn rate: 6 mn rate / 6 = year infl rate / 12
     #   Monthly Rate = (1 + 6-Month Rate)^1/6 −1
+
+    joining_year = parse_date(doj).year
+    inflation_matrix = get_inflation_matrix(initial_inflation_rate = initial_inflation_rate, final_inflation_rate = final_inflation_rate, 
+                                            taper_period_yrs = taper_period_yrs, joining_year = joining_year)
 
     infla_prod_factor = 1
     for year in monthly_salary_detailed:
@@ -100,8 +100,11 @@ def get_inflation_factor(inflation_matrix:dict, monthly_salary_detailed:dict, do
     return round(infla_prod_factor, 2)
 
 # NPV (Net Present Value): value of future amount in present term -> basically inflation adjusted value
-def get_npv(amount:int, discount_rate:float):
-    return int(amount / discount_rate)
+def get_npv_for_given_inflation(amount:int, monthly_salary_detailed:dict, doj:str='9/12/24', 
+                        initial_inflation_rate = 7.0, final_inflation_rate = 3.0, taper_period_yrs = 40):
+    inflation_factor = get_inflation_factor(monthly_salary_detailed, doj=doj, initial_inflation_rate=initial_inflation_rate, final_inflation_rate=final_inflation_rate, taper_period_yrs=taper_period_yrs)
+    npv = int(get_npv(amount, inflation_factor))
+    return npv
 
 # XIRR (Extended Internal Rate of Return): calculate the annualized rate of return
 def get_xirr(final_corpus_amount:int, monthly_salary_detailed:dict, scheme:str='UPS'):
@@ -127,14 +130,19 @@ def get_xirr(final_corpus_amount:int, monthly_salary_detailed:dict, scheme:str='
     return annual_xirr_percent
 
 # Assuming no Pay Commission applies after retirement
-def get_future_pension(inflation_matrix:dict, adjusted_pension:int = None, early_retirement:bool = False, dor:str = None, dob:str='20/5/96', 
-                       pension_duration:int=40, scheme:str = 'UPS', final_corpus_amount:int = None, annuity_rate:float = None):
-    # Validatiom
-    if scheme == 'NPS' and final_corpus_amount is None and annuity_rate is None:
-        raise ValueError('If choosing NPS, must provide Final Corpas Value and Annuity Rate')
+def get_future_pension(adjusted_pension:int = None, early_retirement:bool = False, dor:str = None, dob:str='20/5/96', doj:str='9/12/24', 
+                       pension_duration:int=40, scheme:str = 'UPS', final_corpus_amount:int = None, annuity_rate:float = None,
+                       initial_inflation_rate = 7.0, final_inflation_rate = 3.0, taper_period_yrs = 40):
+    # Validation
+    if scheme == 'NPS' and final_corpus_amount is None:
+        raise ValueError('If choosing NPS, must provide Final Corpas Value')
     if scheme == 'UPS' and adjusted_pension is None:
         raise ValueError('If choosing UPS, must provide Final (Adjusted) Pension')
     
+    joining_year = parse_date(doj).year
+    inflation_matrix = get_inflation_matrix(initial_inflation_rate = initial_inflation_rate, final_inflation_rate = final_inflation_rate, 
+                                            taper_period_yrs = taper_period_yrs, joining_year = joining_year)
+
     # Get Retirement Date, Month, Year
     if early_retirement:
         if dor is None:
@@ -149,8 +157,11 @@ def get_future_pension(inflation_matrix:dict, adjusted_pension:int = None, early
     
     # Get DA at the time of retirement
     da_retire = inflation_matrix[retire_year]
-    future_pension_matrix, period = {}, 0
+    # If Annuity rate is not given for NPS, take it as inflation+1 (usually annuity is that range)
+    if scheme == 'NPS' and annuity_rate is None:
+        annuity_rate = (da_retire * 2) + 1
 
+    future_pension_matrix, period = {}, 0
     while period < pension_duration * 2:
         if scheme == 'UPS':
             mnth_pension_1 = int(adjusted_pension * (1 + (da_retire * (period + 1)) / 100))
@@ -168,26 +179,22 @@ def get_future_pension(inflation_matrix:dict, adjusted_pension:int = None, early
 
 if __name__ == "__main__":
     # Testing Variables
-    interest_rate_tapering_dict = get_default_interes_rate_tapering_dict()
-    final_corpus_amount, yearly_corpus, monthly_salary_detailed = get_final_corpus_amounts_all(scheme='UPS', investment_option='Auto_LC50', starting_level=10, 
-                                                        starting_year_row_in_level=1, promotion_duration_array=[4, 5, 4, 1, 4, 7, 5, 3], 
-                                                        present_pay_matrix_csv='7th_CPC.csv', is_ias=False,
-                                                        dob='20/5/1996', doj='9/12/24', early_retirement=False, dor=None,
-                                                        pay_commission_implement_years=[2026, 2036, 2046, 2056, 2066], fitment_factors=[2, 2, 2, 2, 2],
-                                                        initial_inflation_rate=7.0, final_inflation_rate=3.0, taper_period_yrs=40,
-                                                        interest_rate_tapering_dict=interest_rate_tapering_dict)
-    inflation_matrix = get_inflation_matrix(initial_inflation_rate = 7.0, final_inflation_rate = 3.0, 
-                                            taper_period_yrs = 40, joining_year = 2024)
-    withdraw_corpus, lumpsum_for_ups, adjusted_pension = get_final_corpus_amounts_all(final_corpus_amount, monthly_salary_detailed, scheme='UPS')
-    inflation_factor = get_inflation_factor(inflation_matrix, monthly_salary_detailed)
-    npv = get_npv(final_corpus_amount, inflation_factor)
+    # interest_rate_tapering_dict = get_interest_rate_tapering_dict()
+    # inflation_matrix = get_inflation_matrix(initial_inflation_rate = 7.0, final_inflation_rate = 3.0, 
+    #                                         taper_period_yrs = 40, joining_year = 2024)
+    final_corpus_amount, yearly_corpus, monthly_salary_detailed = get_final_corpus()
+    withdraw_corpus, lumpsum_for_ups, adjusted_pension = get_final_amounts_all(final_corpus_amount, monthly_salary_detailed, scheme='UPS')
+
+    # inflation_factor = get_inflation_factor(monthly_salary_detailed)
+    npv = get_npv_for_given_inflation(final_corpus_amount, monthly_salary_detailed)
     xirr_corpus = get_xirr(final_corpus_amount, monthly_salary_detailed)
+    future_pension_matrix = get_future_pension(adjusted_pension=adjusted_pension, scheme='NPS', final_corpus_amount=final_corpus_amount*0.60, annuity_rate=6.0)
 
     # pprint.pprint(monthly_salary_detailed)
     # pprint.pprint(inflation_matrix)
     print(withdraw_corpus, lumpsum_for_ups, adjusted_pension)
     # pprint.pprint(inflation_factor)
-    # print(final_corpus_amount, npv)
-    # pprint.pprint(xirr_corpus)
+    print(final_corpus_amount, npv)
+    pprint.pprint(xirr_corpus)
 
-    pprint.pprint(get_future_pension(inflation_matrix, adjusted_pension=adjusted_pension, scheme='NPS', final_corpus_amount=final_corpus_amount*0.60, annuity_rate=6.0))
+    pprint.pprint(future_pension_matrix)

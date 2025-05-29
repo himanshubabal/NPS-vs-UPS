@@ -52,7 +52,7 @@ def get_yearly_corpus(yearly_contributions:dict = None, dob:str = '20/05/1996', 
     if yearly_contributions is None:
         yearly_contributions = get_yearly_contribution()
     if interest_rate_tapering_dict is None:
-        interest_rate_tapering_dict = get_default_interes_rate_tapering_dict()
+        interest_rate_tapering_dict = get_interest_rate_tapering_dict()
 
     # Parsing Date
     dob_parsed = parse_date(dob)
@@ -105,8 +105,8 @@ def get_yearly_corpus(yearly_contributions:dict = None, dob:str = '20/05/1996', 
     
     return corpus_at_year_end
 
-
-def get_final_corpus_amounts_all(scheme:str='UPS', investment_option:str = 'Auto_LC50', starting_level:Union[int,str] = 10, 
+# Gets: -> final_corpus_amount, yearly_corpus, monthly_salary_detailed
+def get_final_corpus(scheme:str='UPS', investment_option:str = 'Auto_LC50', starting_level:Union[int,str] = 10, 
                     starting_year_row_in_level:int = 1, promotion_duration_array:list[int] = [4, 5, 4, 1, 4, 7, 5, 3],
                     govt_contrib_percent:float = None,  employee_contrib_percent:float = None,
                     present_pay_matrix_csv:str = '7th_CPC.csv', is_ias:bool = False,
@@ -120,7 +120,7 @@ def get_final_corpus_amounts_all(scheme:str='UPS', investment_option:str = 'Auto
     if early_retirement and dor is None:
         raise ValueError('If retiring early, must provide Date of Retirement')
     if interest_rate_tapering_dict is None:
-        interest_rate_tapering_dict = get_default_interes_rate_tapering_dict()
+        interest_rate_tapering_dict = get_interest_rate_tapering_dict()
     if take_earlier_corpus_into_account and (earlier_corpus is None or earlier_corpus_end_date is None):
         raise ValueError('If taking existing corpus into considertion -> must provide the existing corpus and the date upto which it is')
     
@@ -148,30 +148,30 @@ def get_final_corpus_amounts_all(scheme:str='UPS', investment_option:str = 'Auto
     return (final_corpus_amount, yearly_corpus, monthly_salary_detailed)
 
 
-def take_earlier_corpus_amt_upto_1st_april(corpus_upto_1st_april:int, salary_matrix:dict, scheme:str='UPS', dob:str='20/05/1996', early_retirement:bool=False, dor:str=None):
-    if scheme not in ['NPS', 'UPS']:
-        raise ValueError('Scheme chosen must be either NPS or UPS')
-    if early_retirement and dor is None:
-        raise ValueError('If retiring early, must provide Date of Retirement')
+# def take_earlier_corpus_amt_upto_1st_april(corpus_upto_1st_april:int, salary_matrix:dict, scheme:str='UPS', dob:str='20/05/1996', early_retirement:bool=False, dor:str=None):
+#     if scheme not in ['NPS', 'UPS']:
+#         raise ValueError('Scheme chosen must be either NPS or UPS')
+#     if early_retirement and dor is None:
+#         raise ValueError('If retiring early, must provide Date of Retirement')
     
-    new_doj = '01/04/2025'
-    govt_contrib_percent = 10 if scheme == 'UPS' else 14
-    employee_contrib_percent = 10
+#     new_doj = '01/04/2025'
+#     govt_contrib_percent = 10 if scheme == 'UPS' else 14
+#     employee_contrib_percent = 10
 
-    new_doj_parsed = parse_date(new_doj)
-    print(new_doj_parsed)
-    pprint.pprint(salary_matrix)
+#     new_doj_parsed = parse_date(new_doj)
+#     print(new_doj_parsed)
+#     pprint.pprint(salary_matrix)
 
-    monthly_salary_detailed = get_monthly_salary(salary_matrix=salary_matrix, dob=dob, doj=new_doj, early_retirement=early_retirement, dor=dor)
-    print('Monthly Salary Detailed')
-    # pprint.pprint(monthly_salary_detailed)
+#     monthly_salary_detailed = get_monthly_salary(salary_matrix=salary_matrix, dob=dob, doj=new_doj, early_retirement=early_retirement, dor=dor)
+#     print('Monthly Salary Detailed')
+#     # pprint.pprint(monthly_salary_detailed)
 
-    yearly_contribution = get_yearly_contribution(monthly_salary_detailed=monthly_salary_detailed, employee_contrib_percent=employee_contrib_percent, govt_contrib_percent=govt_contrib_percent,
-                                                  take_earlier_corpus_into_account = True, earlier_corpus = corpus_upto_1st_april)
-    print('Yearly Contributions')
-    pprint.pprint(yearly_contribution)
+#     yearly_contribution = get_yearly_contribution(monthly_salary_detailed=monthly_salary_detailed, employee_contrib_percent=employee_contrib_percent, govt_contrib_percent=govt_contrib_percent,
+#                                                   take_earlier_corpus_into_account = True, earlier_corpus = corpus_upto_1st_april)
+#     print('Yearly Contributions')
+#     pprint.pprint(yearly_contribution)
 
-    return yearly_contribution
+#     return yearly_contribution
 
 if __name__ == "__main__":
     yearly_contributions = get_yearly_contribution()
@@ -180,7 +180,7 @@ if __name__ == "__main__":
     yearly_corpus = get_yearly_corpus()
     # pprint.pprint(yearly_corpus)
 
-    final_corpus_amount, yearly_corpus, monthly_salary_detailed = get_final_corpus_amounts_all(scheme='UPS', is_ias=True, early_retirement=True, dor='10/4/30', earlier_corpus_end_date='01/04/2025', 
+    final_corpus_amount, yearly_corpus, monthly_salary_detailed = get_final_corpus(scheme='UPS', is_ias=True, early_retirement=True, dor='10/4/30', earlier_corpus_end_date='01/04/2025', 
                                                                                                take_earlier_corpus_into_account=True, earlier_corpus=1000000)
     # pprint.pprint(monthly_salary_detailed)
     print(final_corpus_amount)

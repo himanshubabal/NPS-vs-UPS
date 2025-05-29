@@ -3,6 +3,7 @@ from datetime import date
 from dateutil.relativedelta import relativedelta
 import pandas as pd
 import calendar
+import inspect
 import re
 
 # Inputs -> str: DD/MM/YYYY;  Output -> date format (out.year, out.month, out.day)
@@ -97,55 +98,39 @@ def load_csv_into_df(csv_path : str):
     df_loaded.columns = df_loaded.columns.map(str)
     return df_loaded
 
+# NPV (Net Present Value): value of future amount in present term -> basically inflation adjusted value
+def get_npv(amount:int, discount_rate:float):
+    return int(amount / discount_rate)
+
 # Default values for E, C, G and their tapering period
-def get_default_interes_rate_tapering_dict():
+def get_interest_rate_tapering_dict(E_initial:float = 12.0, E_final:float = 6.0,
+                                    C_initial:float = 8.0, C_final:float = 4.0,
+                                    G_initial:float = 8.0, G_final:float = 4.0,
+                                    taper_period_yrs:int = 40):
     interest_rate_tapering_dict = {}
     interest_rate_tapering_dict['E'], interest_rate_tapering_dict['C'], interest_rate_tapering_dict['G'] = {}, {}, {}
-    interest_rate_tapering_dict['Taper Period'] = 40
-    interest_rate_tapering_dict['E']['initial'] = 12.0
-    interest_rate_tapering_dict['E']['final'] = 6.0
-    interest_rate_tapering_dict['C']['initial'] = 8.0
-    interest_rate_tapering_dict['C']['final'] = 4.0
-    interest_rate_tapering_dict['G']['initial'] = 8.0
-    interest_rate_tapering_dict['G']['final'] = 4.0
+    # interest_rate_tapering_dict['Taper Period'] = 40
+    # interest_rate_tapering_dict['E']['initial'] = 12.0
+    # interest_rate_tapering_dict['E']['final'] = 6.0
+    # interest_rate_tapering_dict['C']['initial'] = 8.0
+    # interest_rate_tapering_dict['C']['final'] = 4.0
+    # interest_rate_tapering_dict['G']['initial'] = 8.0
+    # interest_rate_tapering_dict['G']['final'] = 4.0
+    interest_rate_tapering_dict['Taper Period'] = taper_period_yrs
+    interest_rate_tapering_dict['E']['initial'] = E_initial
+    interest_rate_tapering_dict['E']['final'] = E_final
+    interest_rate_tapering_dict['C']['initial'] = C_initial
+    interest_rate_tapering_dict['C']['final'] = C_final
+    interest_rate_tapering_dict['G']['initial'] = G_initial
+    interest_rate_tapering_dict['G']['final'] = G_final
     
     return interest_rate_tapering_dict
 
+# To automatically filter only the required arguments for a function, you can use
+def auto_pass_arguments_to_function(sub_function, **kwargs):
+    sig = inspect.signature(sub_function)
+    accepted_args = {
+        k: v for k, v in kwargs.items() if k in sig.parameters
+    }
+    return sub_function(**accepted_args)
 
-
-
-# To make parse_date_parts.date, parse_date_parts.month, and parse_date_parts.year directly accessible 
-# # as attributes after calling the function, you can wrap the return in a custom class
-# class ParsedDate:
-#     def __init__(self, day, month, year):
-#         self.date = day
-#         self.month = month
-#         self.year = year
-
-#     def __iter__(self):
-#         return iter((self.date, self.month, self.year))
-
-#     def __repr__(self):
-#         return f"ParsedDate(date={self.date}, month={self.month}, year={self.year})"
-
-# def parse_date_old(date_str):
-#     formats = [
-#         "%d/%m/%Y", "%d/%m/%y",   # 19/05/2025, 19-05-2025, 19.05.2025, 19 05 2025
-#         "%d-%m-%Y", "%d-%m-%y",   # 19/May/2025, April & Apr, etc
-#         "%d.%m.%Y", "%d.%m.%y",
-#         "%d %m %Y", "%d %m %y",
-#         "%d-%b-%Y", "%d-%b-%y",
-#         "%d-%B-%Y", "%d-%B-%y",
-#         "%d %b %Y", "%d %b %y",
-#         "%d %B %Y", "%d %B %y",
-#     ]
-
-#     for fmt in formats:
-#         try:
-#             dt = datetime.strptime(date_str.strip(), fmt)
-#             # return dt.day, dt.month, dt.year
-#             return ParsedDate(dt.day, dt.month, dt.year)
-#         except ValueError:
-#             continue
-    
-#     raise ValueError(f"Unrecognized date format: {date_str}")
