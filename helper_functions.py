@@ -137,3 +137,19 @@ def auto_pass_arguments_to_function(sub_function, **kwargs):
 
 def convert_dt_to_string(dt:date):
     return dt.strftime('%d/%m/%y')
+
+def format_inr(amount):
+    s = f"{amount:,.2f}"
+    parts = s.split(".")
+    rupees = parts[0]
+    decimal = parts[1]
+
+    # Convert to Indian number system
+    if len(rupees) > 3:
+        rupees = rupees[:-3][::-1]
+        rupees = ",".join([rupees[i:i+2] for i in range(0, len(rupees), 2)])[::-1] + "," + s[-6:-3]
+    return f"₹{rupees}.{decimal}"
+
+def format_inr_no_paise(amount):
+    return format_inr(round(amount)).split('.')[0]
+

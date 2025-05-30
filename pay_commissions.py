@@ -56,7 +56,8 @@ def get_level_year_from_basic_pay(basic_pay, pay_matrix_df):
                 found_matches.append((str(level), year))
 
     if not found_matches:
-        raise ValueError(f"Basic pay ₹{basic_pay} not found in any level.")
+        # raise ValueError(f"Basic pay ₹{basic_pay} not found in any level.")
+        return (0, 0)
 
     # Sort: highest level first, then lowest year
     found_matches.sort(key=lambda x: (float(x[0].replace('A', '.5')) if 'A' in x[0] else float(x[0]), -x[1]), reverse=True)
