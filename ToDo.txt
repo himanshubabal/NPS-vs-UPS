@@ -16,3 +16,6 @@ TODO
     In this, also do that in NPS -> you get the 40% annuity amount back after pension ends
     hence consider full picture, with all amounts 
 12. 7th CPC -> DA historic data
+13. Even if all data entered -> consider before 1st April, all had NPS, difference will come only after that bw UPS & NPS
+14. Investment Option -> 'Active' yet to be done
+15. Promotion --> take into acc user input next pay level, not just periods
