@@ -136,7 +136,7 @@ def get_final_corpus(scheme:str='UPS', investment_option:str = 'Auto_LC50', star
                        present_pay_matrix_csv=present_pay_matrix_csv, dob=dob, doj=doj, is_ias=is_ias, early_retirement=early_retirement, dor=dor,
                        pay_commission_implement_years=pay_commission_implement_years, fitment_factors=fitment_factors,
                        initial_inflation_rate=initial_inflation_rate, final_inflation_rate=final_inflation_rate, taper_period_yrs=taper_period_yrs)
-    monthly_salary_detailed = get_monthly_salary(salary_matrix=salary_matrix, dob=dob, doj=doj, early_retirement=early_retirement, dor=dor)
+    monthly_salary_detailed = get_monthly_salary(salary_matrix=salary_matrix, dob=dob, doj=doj, early_retirement=early_retirement, dor=dor, take_earlier_corpus_into_account=take_earlier_corpus_into_account)
     yearly_contribution = get_yearly_contribution(monthly_salary_detailed=monthly_salary_detailed, employee_contrib_percent=employee_contrib_percent, govt_contrib_percent=govt_contrib_percent,
                                                   take_earlier_corpus_into_account=take_earlier_corpus_into_account, earlier_corpus=earlier_corpus)
     yearly_corpus = get_yearly_corpus(yearly_contributions=yearly_contribution, dob=dob, doj=doj, early_retirement=early_retirement, dor=dor,

@@ -12,33 +12,17 @@ def get_salary_matrix(starting_level:Union[int,str] = 10, starting_year_row_in_l
                        present_pay_matrix_csv:str = '7th_CPC.csv', pay_commission_implement_years:list[int] = [2026, 2036, 2046, 2056, 2066], fitment_factors:list[int] = [2, 2, 2, 2, 2],
                        dob:str = '20/5/1996', doj:str = '9/12/24', early_retirement:bool = False, dor:str = None, is_ias:bool = False,
                        initial_inflation_rate:float = 7.0, final_inflation_rate:float = 3.0, taper_period_yrs:int=40):
-    
-    # Get dates parsed in easy to use format
-    joining_date_parsed = parse_date(doj)
-    # If retiring early, get Date of Retirement (dor) from user input
-    if early_retirement and dor is None:
-        raise ValueError('If retiring early, must provide Date of Retirement')
-    # if early_retirement:
-    #     if dor is None:
-    #         raise ValueError('If retiring early, must provide Date of Retirement')
-    #     else:
-    #         retire_date_parsed = parse_date(dor)
-    # else:   # Else retire at the age of 60
-    #     retire_date_parsed = get_retirement_date(dob, retirement_age=60)
 
-    # Changing joining_year according to joining_date's month
-    # If joined before 1st July, add nothing;    # If joined after 1st July, add 0.5
-    joining_year = joining_date_parsed.year + 0.5 if joining_date_parsed.month > 7 else joining_date_parsed.year
+    # Get DA
+    da_matrix = get_DA_matrix(initial_inflation_rate=initial_inflation_rate, final_inflation_rate=final_inflation_rate, doj=doj, 
+                              taper_period_yrs=taper_period_yrs, pay_commission_implement_years=pay_commission_implement_years)
 
     # Get Career Progression
     career_progression_matrix = career_progression(starting_level=starting_level, starting_year_row_in_level=starting_year_row_in_level, 
                                                    promotion_duration_array=promotion_duration_array, present_pay_matrix_csv=present_pay_matrix_csv, 
                                                    dob=dob, doj=doj, is_ias=is_ias, early_retirement=early_retirement, dor=dor,
-                                                   pay_commission_implement_years=pay_commission_implement_years, fitment_factors=fitment_factors)
-
-    # Get DA
-    da_matrix = get_DA_matrix(initial_inflation_rate=initial_inflation_rate, final_inflation_rate=final_inflation_rate, 
-                              taper_period_yrs=taper_period_yrs, joining_year=joining_year, pay_commission_implement_years=pay_commission_implement_years)
+                                                   pay_commission_implement_years=pay_commission_implement_years, fitment_factors=fitment_factors,
+                                                   da_matrix=da_matrix)
     
     # Get 6-monthly salary
     salary_matrix = {}
@@ -56,7 +40,8 @@ def get_salary_matrix(starting_level:Union[int,str] = 10, starting_year_row_in_l
     return salary_matrix
 
 
-def get_monthly_salary(salary_matrix:dict=None, dob:str = '20/5/1996', doj:str = '9/12/24', early_retirement:bool = False, dor:str = None):
+def get_monthly_salary(salary_matrix:dict=None, dob:str = '20/5/1996', doj:str = '9/12/24', 
+                       early_retirement:bool = False, dor:str = None, take_earlier_corpus_into_account:bool = False):
     if salary_matrix is None:
         salary_matrix = get_salary_matrix()
     # Imp dates
@@ -92,9 +77,11 @@ def get_monthly_salary(salary_matrix:dict=None, dob:str = '20/5/1996', doj:str =
 
                 # Adjust first month salary proportionally to days served
                 if year == joining.year and month == joining.month:
-                    days_in_month = monthrange(year, month)[1]
-                    served_days = days_in_month - joining.day + 1
-                    adjusted_salary = int(six_monthly_salary * (served_days / days_in_month))
+                    # Only adjust if NOT taking earlier corpus into account, otherwise calculate for full month
+                    if not take_earlier_corpus_into_account:
+                        days_in_month = monthrange(year, month)[1]
+                        served_days = days_in_month - joining.day + 1
+                        adjusted_salary = int(six_monthly_salary * (served_days / days_in_month))
 
                 # Adjust last month salary proportionally to days served
                 # NOT REQUIRED -> since retirement happens on last day of the month ONLY

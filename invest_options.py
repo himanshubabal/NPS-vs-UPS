@@ -52,7 +52,7 @@ def get_ecg_matrix(investment_option:str = 'Auto_LC50', start_age:int = 20, end_
         # LC25 -> Till age of 35 -> E:25, C:45, G:30
         #         E: reduce by 1 each yr, C: reduce by 2 each yr, G: inc by 3 each yr
         #         Till age of 55 -> E:5, C:5, G:90
-        if investment_option == auto_LC25:
+        elif investment_option == auto_LC25:
             if age <= 35:
                 E_percent, C_percent, G_percent = 25, 45, 30
             elif age >= 55:
@@ -65,7 +65,7 @@ def get_ecg_matrix(investment_option:str = 'Auto_LC50', start_age:int = 20, end_
         # LC50 -> Till age of 35 -> E:50, C:30, G:20
         #         E: reduce by 2 each yr, C: reduce by 1 each yr, G: inc by 3 each yr
         #         Till age of 55 -> E:10, C:10, G:80
-        if investment_option == auto_LC50:
+        elif investment_option == auto_LC50:
             if age <= 35:
                 E_percent, C_percent, G_percent = 50, 30, 20
             elif age >= 55:
@@ -78,7 +78,7 @@ def get_ecg_matrix(investment_option:str = 'Auto_LC50', start_age:int = 20, end_
         # LC75 -> Till age 35 -> E:75, C:10, G:15
         #         E: reduce by 3 each year, C:inc by 1 for 10 yr const for next 5 reduce by 2 for next 5, G: inc by 3 each year 
         #         Till age of 55 -> E:15, C:10, G:75
-        if investment_option == auto_LC75:
+        elif investment_option == auto_LC75:
             if age <= 35:
                 E_percent, C_percent, G_percent = 75, 10, 15
             elif age >= 55:
@@ -96,7 +96,7 @@ def get_ecg_matrix(investment_option:str = 'Auto_LC50', start_age:int = 20, end_
                     C_percent = 20 - 2 * (years_since_35 - 15)
         # Active -> E: max 75% upto age 50, after that 2.5% redn in E_max, till E_max is 50% by age of 60
         #           C: constant at 25%; G: 0% till age 50 and reaches 25% by age 60
-        else:
+        elif investment_option == active_choice:
             if age <= 50:       # Till age of 50
                 E_percent, C_percent, G_percent = 75, 25, 0
             elif age <= 60:     # Age 50 to 60
@@ -106,6 +106,9 @@ def get_ecg_matrix(investment_option:str = 'Auto_LC50', start_age:int = 20, end_
                 G_percent = 0 + 2.5 * years_since_50
             else:              # Above 60 (not needed)
                 E_percent, C_percent, G_percent = 50, 25, 25     # Assume post-60 E stays at 50%
+        # Error -> Not a valid input
+        else:
+            raise ValueError('Provide Valid Investment Options')
 
         ecg_matrix[age]['E'], ecg_matrix[age]['C'], ecg_matrix[age]['G'] = E_percent, C_percent, G_percent
 
@@ -120,3 +123,7 @@ if __name__ == "__main__":
 
     ecg_matrix = get_ecg_matrix(investment_option = 'Active')
     pprint.pprint(ecg_matrix)
+
+    pprint.pprint(get_ecg_matrix(investment_option = 'Auto_LC75'))
+    pprint.pprint(get_ecg_matrix(investment_option = 'Standard/Benchmark'))
+    

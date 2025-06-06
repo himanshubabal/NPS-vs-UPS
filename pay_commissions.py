@@ -7,6 +7,7 @@ import pprint
 
 from itertools import accumulate
 from helper_functions import *
+from rates import get_DA_matrix
 
 
 def get_basic_pay(level, year, pay_matrix_df):
@@ -106,7 +107,7 @@ def annual_increment(current_level, year, pay_matrix_df):
     return (level_str, year + 1, next_basic)
 
 
-def promote_employee(current_level, year, pay_matrix_df, is_ias=False):
+def promote_employee(current_level, year, pay_matrix_df, is_ias=DEFAULT_IS_IAS):
     """
     Promote employee based on rules:
     - Validate current position.
@@ -181,9 +182,10 @@ def promote_employee(current_level, year, pay_matrix_df, is_ias=False):
     return (next_level, match_index + 1, int(next_column.iloc[match_index]))
 
 
-def generate_next_pay_commission(present_pay_matrix_csv='7th_CPC.csv', 
-                                 fitment_factor=None, percent_inc_salary=None, percent_last_DA=None, 
-                                 default_fitment_factor=2):
+# def generate_next_pay_commission(present_pay_matrix_csv_path_and_name:str=PAY_MATRIX_7CPC_CSV, data_folder_path:str=DATA_FOLDER_PATH, 
+#                                  fitment_factor=None, percent_inc_salary=None, percent_last_DA=None, 
+#                                  default_fitment_factor=DEFAULT_FITMENT_FACTOR):
+def generate_next_pay_commission(fitment_factor:float, present_pay_matrix_csv_path_and_name:str=PAY_MATRIX_7CPC_CSV, data_folder_path:str=DATA_FOLDER_PATH):
     """
     Generate the next CPC Pay Matrix based on fitment factor or salary increment % and DA %.
 
@@ -205,23 +207,24 @@ def generate_next_pay_commission(present_pay_matrix_csv='7th_CPC.csv',
     #     return float(value) / 100 if float(value) > 1 else float(value)
 
     # Validation
-    if fitment_factor is None:
-        if percent_inc_salary is not None and percent_last_DA is not None:
-            inc = normalize_percent(percent_inc_salary)
-            da = normalize_percent(percent_last_DA)
-            fitment_factor = round((1 + da) * (1 + inc), 2)
-        else:
-            fitment_factor = default_fitment_factor  # One of the inputs missing — fallback to default
+    # if fitment_factor is None:
+    #     if percent_inc_salary is not None and percent_last_DA is not None:
+    #         inc = normalize_percent(percent_inc_salary)
+    #         da = normalize_percent(percent_last_DA)
+    #         fitment_factor = round((1 + da) * (1 + inc), 2)
+    #     else:
+    #         fitment_factor = default_fitment_factor  # One of the inputs missing — fallback to default
             
     # Extract current CPC number from source filename
-    match = re.search(r"(\d+)(?:st|nd|rd|th)_CPC", present_pay_matrix_csv)
+    present_pay_matrix_csv_name = present_pay_matrix_csv_path_and_name.replace(data_folder_path, "")
+    match = re.search(r"(\d+)(?:st|nd|rd|th)_CPC", present_pay_matrix_csv_name)
     if not match:
         raise ValueError("Source filename must contain CPC name like '7th_CPC'")
     current_cpc = int(match.group(1))
     next_cpc = f"{current_cpc + 1}th_CPC"
 
     # Copy the input DataFrame to avoid modifying original
-    present_pay_matrix_df = pd.read_csv(present_pay_matrix_csv)
+    present_pay_matrix_df = pd.read_csv(data_folder_path + present_pay_matrix_csv_path_and_name)
     new_df = present_pay_matrix_df.copy()
 
     # Skip Headers (First Row & First Column)
@@ -244,7 +247,7 @@ def generate_next_pay_commission(present_pay_matrix_csv='7th_CPC.csv',
         ).astype("Int64")  # Ensures proper nullable integer type
 
     # Save to CSV
-    output_filename = f"{next_cpc}_fitment_factor_{fitment_factor}.csv"
+    output_filename = f"{data_folder_path}{next_cpc}_fitment_factor_{fitment_factor}.csv"
     new_df.to_csv(output_filename, index=False)
 
     return new_df
@@ -253,7 +256,7 @@ def generate_next_pay_commission(present_pay_matrix_csv='7th_CPC.csv',
 # Career journey -> defined through given promotions (level/which prom, year of prom)
 def career_progression(starting_level=10, starting_year_row_in_level=1, promotion_duration_array=[4, 5, 4, 1, 4, 7, 5, 3], 
                        present_pay_matrix_csv='7th_CPC.csv', early_retirement:bool = False,
-                       dob='20/07/1999', doj='9/10/24', dor:str = None, is_ias=False,
+                       dob='20/07/1999', doj='9/10/24', dor:str = None, is_ias=False, da_matrix:dict = None, percent_inc_salary:float = 15,
                        pay_commission_implement_years=[2026, 2036, 2046, 2056, 2066], fitment_factors=[2, 2, 2, 2, 2]):
     """
     Simulates career progression with annual increments and level promotions
@@ -267,7 +270,7 @@ def career_progression(starting_level=10, starting_year_row_in_level=1, promotio
     # Validation -- #fitment factors == #pay commissions
     if fitment_factors is None:
         # Use default fitment factor = 2 if none provided
-        fitment_factors = [2] * len(pay_commission_implement_years)
+        fitment_factors = [DEFAULT_FITMENT_FACTOR] * len(pay_commission_implement_years)
     else:
         if len(fitment_factors) != len(pay_commission_implement_years):
             raise ValueError("Number of fitment factors must match number of pay commission implementation years.")
@@ -278,18 +281,18 @@ def career_progression(starting_level=10, starting_year_row_in_level=1, promotio
         raise ValueError(f"Invalid pay level: {str(starting_level)}")
     
     # Calculate max number of possible promotions
-    current_index = levels.index(str(starting_level))
-    if is_ias and '13A' in levels and str(starting_level) == '13':
-        max_promotions = len(levels) - current_index - 2
-    else:
-        max_promotions = len(levels) - current_index - 1
+    # current_index = levels.index(str(starting_level))
+    # if is_ias and '13A' in levels and str(starting_level) == '13':
+    #     max_promotions = len(levels) - current_index - 2
+    # else:
+    #     max_promotions = len(levels) - current_index - 1
     
     # Validate if promotion_years_array has more no of promotions than possible
-    if len(promotion_duration_array) > max_promotions:
-        raise ValueError(
-            f"Too many promotions requested: only {max_promotions} promotions possible from Level {str(starting_level)}, "
-            f"but got {len(promotion_duration_array)} promotion steps."
-        )
+    # if len(promotion_duration_array) > max_promotions:
+    #     raise ValueError(
+    #         f"Too many promotions requested: only {max_promotions} promotions possible from Level {str(starting_level)}, "
+    #         f"but got {len(promotion_duration_array)} promotion steps."
+    #     )
     if early_retirement and dor is None:
         raise ValueError('If retiring early, must provide Date of Retirement')
 
@@ -356,8 +359,18 @@ def career_progression(starting_level=10, starting_year_row_in_level=1, promotio
             # Pay Commission --> only in the years it is implemented [given in pay_commission_implement_years]
             # Applied before Promotion, so that updated pay commission is used in the promotion
             if year == pay_commission_implement_years[pay_commission_index] and pay_commission_index < len(pay_commission_implement_years):
-                # Variables to be used here
+                # If percent_inc_salary is given, use that, over and above given fitment factor
                 fit_factor = fitment_factors[pay_commission_index]
+                # if percent_inc_salary is not None:
+                #     percent_last_DA = da_matrix[year-0.5]
+                #     print(f'Last DA: {percent_last_DA}, Year: {year}')
+
+                #     inc = normalize_percent(percent_inc_salary)
+                #     da = normalize_percent(percent_last_DA)
+                #     fit_factor = round((1 + da) * (1 + inc), 2)
+                # else:
+                #     fit_factor = fitment_factors[pay_commission_index]
+
                 next_pay_comm_no = present_pay_comm_no + 1
                 next_pay_comm_fileName = f"{next_pay_comm_no}th_CPC_fitment_factor_{fit_factor}.csv"
 
@@ -365,7 +378,11 @@ def career_progression(starting_level=10, starting_year_row_in_level=1, promotio
                 if os.path.exists(next_pay_comm_fileName):
                     current_pay_matrix = load_csv_into_df(next_pay_comm_fileName)
                 else:
-                    current_pay_matrix = generate_next_pay_commission(present_pay_matrix_csv=present_pay_matrix_csv, fitment_factor=fit_factor)
+                    # current_pay_matrix = generate_next_pay_commission(present_pay_matrix_csv_path_and_name=present_pay_matrix_csv, fitment_factor=fit_factor)
+                    # percent_inc_salary=None, percent_last_DA=None
+                    
+                    # percent_inc_salary = 15
+                    current_pay_matrix = generate_next_pay_commission(fitment_factor=fit_factor, present_pay_matrix_csv_path_and_name=present_pay_matrix_csv)
                 
                 # Updating new basic pay according to the new pay commission
                 basic_pay = get_basic_pay(pay_level, year_row_in_current_pay_level, current_pay_matrix)
@@ -402,7 +419,8 @@ if __name__ == "__main__":
     # progression = career_progression(starting_level=10, starting_year_in_level=1, promotion_duration_array=[4, 5, 4, 1, 4, 7, 5], 
     #                    present_pay_matrix_csv='7th_CPC.csv', dob='20/07/1999', doj='9/10/24', is_ias=True,
     #                    pay_commission_implement_years=[2026, 2036, 2046, 2056, 2066], fitment_factors=[2, 2, 2, 2, 2])
-    progression = career_progression(is_ias=True, early_retirement=True, dor='10/4/30') 
-
+    da_matrix = get_DA_matrix()
+    progression = career_progression(is_ias=True, early_retirement=True, dor='10/4/30', da_matrix=da_matrix) 
+    pprint.pprint(da_matrix)
     pprint.pprint(progression)
 

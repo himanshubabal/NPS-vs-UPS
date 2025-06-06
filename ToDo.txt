@@ -19,3 +19,5 @@ TODO
 13. Even if all data entered -> consider before 1st April, all had NPS, difference will come only after that bw UPS & NPS
 14. Investment Option -> 'Active' yet to be done
 15. Promotion --> take into acc user input next pay level, not just periods
+16. Add % increment in each pay commission
+17. Promotion -- wrt service --> automatically fill default promotions

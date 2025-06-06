@@ -1,10 +1,14 @@
 from datetime import datetime
 from datetime import date
 from dateutil.relativedelta import relativedelta
+from babel.numbers import format_currency, format_compact_currency
+import streamlit as st
 import pandas as pd
 import calendar
 import inspect
 import re
+
+from default_constants import *
 
 # Inputs -> str: DD/MM/YYYY;  Output -> date format (out.year, out.month, out.day)
 def parse_date(date_str:str):
@@ -87,13 +91,15 @@ def normalize_percent(value):
     return float(value) / 100 if float(value) > 1 else float(value)
 
 # loads given csv file into pd dataframe
-def load_csv_into_df(csv_path : str):
+# @st.cache_data
+def load_csv_into_df(csv_name:str, data_path:str = DATA_FOLDER_PATH):
     '''
     In -> .csv file path/name
     Out -> pandas 'dataframe' onbject
     '''
     # Load the pay matrix CSV once and keep in memory
-    df_loaded = pd.read_csv(csv_path)
+    # df_loaded = pd.read_csv(csv_path)
+    df_loaded = pd.read_csv(data_path + csv_name)
     # Convert column names to string for consistency
     df_loaded.columns = df_loaded.columns.map(str)
     # df_loaded.set_index(df_loaded.columns[0])
@@ -104,19 +110,12 @@ def get_npv(amount:int, discount_rate:float):
     return int(amount / discount_rate)
 
 # Default values for E, C, G and their tapering period
-def get_interest_rate_tapering_dict(E_initial:float = 12.0, E_final:float = 6.0,
-                                    C_initial:float = 8.0, C_final:float = 4.0,
-                                    G_initial:float = 8.0, G_final:float = 4.0,
-                                    taper_period_yrs:int = 40):
+def get_interest_rate_tapering_dict(E_initial:float = DEFAULT_E_INITIAL, E_final:float = DEFAULT_E_FINAL,
+                                    C_initial:float = DEFAULT_C_INITIAL, C_final:float = DEFAULT_C_FINAL,
+                                    G_initial:float = DEFAULT_G_INITIAL, G_final:float = DEFAULT_G_FINAL,
+                                    taper_period_yrs:int = DEFAULT_TAPER_PERIOD):
     interest_rate_tapering_dict = {}
     interest_rate_tapering_dict['E'], interest_rate_tapering_dict['C'], interest_rate_tapering_dict['G'] = {}, {}, {}
-    # interest_rate_tapering_dict['Taper Period'] = 40
-    # interest_rate_tapering_dict['E']['initial'] = 12.0
-    # interest_rate_tapering_dict['E']['final'] = 6.0
-    # interest_rate_tapering_dict['C']['initial'] = 8.0
-    # interest_rate_tapering_dict['C']['final'] = 4.0
-    # interest_rate_tapering_dict['G']['initial'] = 8.0
-    # interest_rate_tapering_dict['G']['final'] = 4.0
     interest_rate_tapering_dict['Taper Period'] = taper_period_yrs
     interest_rate_tapering_dict['E']['initial'] = E_initial
     interest_rate_tapering_dict['E']['final'] = E_final
@@ -138,18 +137,33 @@ def auto_pass_arguments_to_function(sub_function, **kwargs):
 def convert_dt_to_string(dt:date):
     return dt.strftime('%d/%m/%y')
 
+def get_compact_currency(x:int):
+    return format_compact_currency(x, 'INR', locale='en_IN', fraction_digits=4)
+
+def get_currency(x:int):
+    currency = format_currency(x, 'INR', locale='en_IN')
+    currency = currency.replace('.00', '')
+    return currency
+
+
 def format_inr(amount):
-    s = f"{amount:,.2f}"
-    parts = s.split(".")
-    rupees = parts[0]
-    decimal = parts[1]
+    return format_currency(amount, 'INR', locale='en_IN', format=u'¤#,##,##0',currency_digits=False)
 
-    # Convert to Indian number system
-    if len(rupees) > 3:
-        rupees = rupees[:-3][::-1]
-        rupees = ",".join([rupees[i:i+2] for i in range(0, len(rupees), 2)])[::-1] + "," + s[-6:-3]
-    return f"₹{rupees}.{decimal}"
 
-def format_inr_no_paise(amount):
-    return format_inr(round(amount)).split('.')[0]
 
+
+
+# def format_inr(amount):
+#     s = f"{amount:,.2f}"
+#     parts = s.split(".")
+#     rupees = parts[0]
+#     decimal = parts[1]
+
+#     # Convert to Indian number system
+#     if len(rupees) > 3:
+#         rupees = rupees[:-3][::-1]
+#         rupees = ",".join([rupees[i:i+2] for i in range(0, len(rupees), 2)])[::-1] + "," + s[-6:-3]
+#     return f"₹{rupees}.{decimal}"
+
+# def format_inr_no_paise(amount):
+#     return format_inr(round(amount)).split('.')[0]

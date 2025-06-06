@@ -27,12 +27,13 @@ def get_full_pension_amt_UPS(monthly_salary_detailed:dict):
 
 # Gets -> withdraw_corpus, lumpsum_for_ups, adjusted_pension (given %withdrawl)
 def get_final_amounts_all(final_corpus_amount:int, monthly_salary_detailed:dict, dob:str='20/5/1996', doj:str='9/12/24', 
-                          early_retirement:bool=False, dor:str=None, withdrawl_percentage:float = 60.00, scheme:str = 'UPS', annuity_rate:float = None):   
+                          early_retirement:bool=False, dor:str=None, withdrawl_percentage:float = 60.00, scheme:str = 'UPS', annuity_rate:float = None, 
+                          initial_inflation_rate:float = 7.0, final_inflation_rate:float = 3.0, taper_period_yrs:int = 40):   
     # Validations
     if scheme not in ['NPS', 'UPS']:
         raise ValueError('Scheme chosen must be either NPS or UPS')
-    if scheme == 'NPS' and annuity_rate is None:
-        raise ValueError('If choosing NPS, must provide Annuity Rate')
+    # if scheme == 'NPS' and annuity_rate is None:
+    #     raise ValueError('If choosing NPS, must provide Annuity Rate')
     
     # Parsing important dates
     doj_parsed = parse_date(doj)
@@ -43,6 +44,17 @@ def get_final_amounts_all(final_corpus_amount:int, monthly_salary_detailed:dict,
             dor_parsed = parse_date(dor)
     else:
         dor_parsed = get_retirement_date(dob, retirement_age=60)
+
+    # IF NPS, and annuity_rate is not given, get annuity_rate from retirement year's inflation + 1 %
+    if scheme == 'NPS' and annuity_rate is None:
+        joining_year = parse_date(doj).year
+        retire_year = dor_parsed.year
+        retire_year += 0.5 if dor_parsed.month > 6 else 0
+        inflation_matrix = get_inflation_matrix(initial_inflation_rate = initial_inflation_rate, final_inflation_rate = final_inflation_rate, 
+                                                taper_period_yrs = taper_period_yrs, joining_year = joining_year)
+        # Get DA at the time of retirement
+        da_retire = inflation_matrix[retire_year]
+        annuity_rate = (da_retire * 2) + 1
 
     # Calculating FULL Pension Amount
     if scheme == 'UPS':
@@ -104,7 +116,7 @@ def get_npv_for_given_inflation(amount:int, monthly_salary_detailed:dict, doj:st
                         initial_inflation_rate = 7.0, final_inflation_rate = 3.0, taper_period_yrs = 40):
     inflation_factor = get_inflation_factor(monthly_salary_detailed, doj=doj, initial_inflation_rate=initial_inflation_rate, final_inflation_rate=final_inflation_rate, taper_period_yrs=taper_period_yrs)
     npv = int(get_npv(amount, inflation_factor))
-    return npv
+    return (inflation_factor, npv)
 
 # XIRR (Extended Internal Rate of Return): calculate the annualized rate of return
 def get_xirr(final_corpus_amount:int, monthly_salary_detailed:dict, scheme:str='UPS'):
@@ -132,7 +144,7 @@ def get_xirr(final_corpus_amount:int, monthly_salary_detailed:dict, scheme:str='
 # Assuming no Pay Commission applies after retirement
 def get_future_pension(adjusted_pension:int = None, early_retirement:bool = False, dor:str = None, dob:str='20/5/96', doj:str='9/12/24', 
                        pension_duration:int=40, scheme:str = 'UPS', final_corpus_amount:int = None, annuity_rate:float = None,
-                       initial_inflation_rate = 7.0, final_inflation_rate = 3.0, taper_period_yrs = 40):
+                       initial_inflation_rate:float = 7.0, final_inflation_rate:float = 3.0, taper_period_yrs:int = 40):
     # Validation
     if scheme == 'NPS' and final_corpus_amount is None:
         raise ValueError('If choosing NPS, must provide Final Corpas Value')
@@ -157,7 +169,7 @@ def get_future_pension(adjusted_pension:int = None, early_retirement:bool = Fals
     
     # Get DA at the time of retirement
     da_retire = inflation_matrix[retire_year]
-    # If Annuity rate is not given for NPS, take it as inflation+1 (usually annuity is that range)
+    # If Annuity rate is not given for NPS, take it as inflation+1 (usually annuity is in that range)
     if scheme == 'NPS' and annuity_rate is None:
         annuity_rate = (da_retire * 2) + 1
 
