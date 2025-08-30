@@ -1,6 +1,6 @@
 from contribution import *
 from rates import *
-from helper_functions import *
+from helpers.helper_functions import *
 
 from datetime import date
 from dateutil.relativedelta import relativedelta
