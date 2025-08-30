@@ -224,22 +224,6 @@ with tab1:
                 st.markdown("**Set your promotion timeline:**")
                 st.caption(f"💡 Default timeline: {'→'.join(map(str, DEFAULT_PROMOTION_TIMELINE))} years (total: {sum(DEFAULT_PROMOTION_TIMELINE)} years)")
                 
-                # Add/Remove promotion controls
-                col_add, col_remove = st.columns([1, 1])
-                with col_add:
-                    if st.button("➕ Add Promotion", key="add_promotion"):
-                        if 'num_promotions' not in st.session_state:
-                            st.session_state.num_promotions = min(3, max_promotions)  # Start with 3 or max available
-                        else:
-                            st.session_state.num_promotions = min(st.session_state.num_promotions + 1, max_promotions)
-                        st.rerun()
-                
-                with col_remove:
-                    if st.button("➖ Remove Promotion", key="remove_promotion"):
-                        if 'num_promotions' in st.session_state:
-                            st.session_state.num_promotions = max(1, st.session_state.num_promotions - 1)
-                            st.rerun()
-                
                 # Initialize number of promotions
                 if 'num_promotions' not in st.session_state:
                     st.session_state.num_promotions = min(3, max_promotions)
@@ -249,7 +233,7 @@ with tab1:
                     st.markdown(f"---")
                     st.markdown(f"**Promotion {curr_level + 1}:**")
                     
-                    col_prom_level, col_prom_year = st.columns(2)
+                    col_prom_level, col_prom_year, col_prom_info = st.columns([1, 1, 2])
                     
                     with col_prom_level:
                         next_level = st.selectbox(
@@ -273,18 +257,36 @@ with tab1:
                             help=f'How many years to reach Level {next_level}'
                         )
                     
-                    # Show promotion year
-                    if next_level and prom_year:
-                        # Validate total promotion years don't exceed service years
-                        total_promotion_years = sum(prom_period) + prom_year
-                        if total_promotion_years > years_of_service:
-                            st.error(f"⚠️ **Warning**: Total promotion years ({total_promotion_years:.1f}) exceeds your service period ({years_of_service:.1f} years)")
-                        else:
-                            promotion_year = joining_year + total_promotion_years
-                            st.success(f"🎯 **Level {next_level} in {promotion_year}** (after {prom_year} years)")
+                    with col_prom_info:
+                        # Show promotion year info in the same row to save vertical space
+                        if next_level and prom_year:
+                            # Validate total promotion years don't exceed service years
+                            total_promotion_years = sum(prom_period) + prom_year
+                            if total_promotion_years > years_of_service:
+                                st.error(f"⚠️ **Warning**: Total promotion years ({total_promotion_years:.1f}) exceeds your service period ({years_of_service:.1f} years)")
+                            else:
+                                promotion_year = joining_year + total_promotion_years
+                                st.success(f"🎯 **Level {next_level} in {promotion_year}** (after {prom_year} years)")
                         
                         prom_level.append(next_level)
                         prom_period.append(prom_year)
+                
+                # Add/Remove promotion controls at the end
+                st.markdown("---")
+                col_add, col_remove = st.columns([1, 1])
+                with col_add:
+                    if st.button("➕ Add Promotion", key="add_promotion"):
+                        if 'num_promotions' not in st.session_state:
+                            st.session_state.num_promotions = min(3, max_promotions)  # Start with 3 or max available
+                        else:
+                            st.session_state.num_promotions = min(st.session_state.num_promotions + 1, max_promotions)
+                        st.rerun()
+                
+                with col_remove:
+                    if st.button("➖ Remove Promotion", key="remove_promotion"):
+                        if 'num_promotions' in st.session_state:
+                            st.session_state.num_promotions = max(1, st.session_state.num_promotions - 1)
+                            st.rerun()
                 
                 if len(prom_period) == 0:
                     prom_period = DEFAULT_PROMOTION_TIMELINE[:max_promotions]
@@ -302,13 +304,24 @@ with tab1:
                     for i, (level, years) in enumerate(zip(prom_level, prom_period)):
                         cumulative_years += years
                         promotion_year = joining_year + cumulative_years
+                        
+                        # Calculate correct age using proper date arithmetic
+                        from datetime import date
+                        dob_date = parse_date(dob)
+                        promotion_date = date(promotion_year, dob_date.month, dob_date.day)
+                        age_at_promotion = promotion_date.year - dob_date.year
+                        
+                        # Adjust age if birthday hasn't occurred yet in promotion year
+                        if (promotion_date.month < dob_date.month) or (promotion_date.month == dob_date.month and promotion_date.day < dob_date.day):
+                            age_at_promotion -= 1
+                        
                         timeline_data.append({
                             "Promotion": i + 1,
                             "From Level": current_level,
                             "To Level": level,
                             "Years": years,
                             "Year": promotion_year,
-                            "Age": parse_date(dob).year + cumulative_years - parse_date(dob).year
+                            "Age": age_at_promotion
                         })
                         current_level = level
                     
