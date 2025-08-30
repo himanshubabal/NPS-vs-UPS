@@ -147,7 +147,7 @@ DEFAULT_G = 8.0   # Government bond returns
 DEFAULT_INITIAL_INFLATION_RATE = 7.0
 DEFAULT_E_INITIAL = 12.0
 DEFAULT_C_INITIAL = 8.0
-DEFAULT_G_INITIAL = 4.0  # Note: Different from constant mode
+DEFAULT_G_INITIAL = 8.0  # Government bonds start at 8% and taper to 4%
 
 # Default final rates for tapering mode
 # These are the ending rates after the taper period
@@ -184,7 +184,7 @@ CONSTANT USAGE GUIDE:
 4. FINANCIAL RATES: Drive investment returns and inflation
    - E (Equity): Higher returns, higher risk, tapers from 12% to 6%
    - C (Corporate Bonds): Medium returns, medium risk, tapers from 8% to 4%
-   - G (Government Bonds): Lower returns, lower risk, stays at 4%
+   - G (Government Bonds): Lower returns, lower risk, tapers from 8% to 4%
 
 5. TIME PERIODS: Affect calculation granularity
    - Taper period: How quickly rates change (40 years = gradual change)
