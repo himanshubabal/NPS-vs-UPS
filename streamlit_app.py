@@ -195,7 +195,7 @@ if starting_level == 0 and considering_existing_corpus:
     st.stop()
 
 # Advanced Configuration Tabs
-tab1, tab2, tab3, tab4 = st.tabs(["📈 Career Progression", "💰 Financial Parameters", "🏛️ Pay Commissions", "📊 Investment Options"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📈 Career Progression", "💰 Financial Parameters", "🏛️ Pay Commissions", "📊 Investment Options", "💰 Retirement Options"])
 
 with tab1:
     st.markdown("### 📈 Career Progression Settings")
@@ -542,6 +542,47 @@ with tab3:
 with tab4:
     st.markdown("### 📊 Investment Options")
     
+with tab5:
+    st.markdown("### 💰 Retirement Options")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        # Annuity Rate
+        retirement_year = parse_date(dor).year + 0.5 if parse_date(dor).month >= 7 else parse_date(dor).month
+        inflation_at_retirement = 6.0  # Default value
+        
+        annuity_rate = st.number_input(
+            label='📊 Annuity Rate (%)',
+            step=0.1,
+            min_value=1.0,
+            max_value=10.0,
+            value=inflation_at_retirement + 1,
+            help='Rate for converting NPS corpus to monthly pension'
+        )
+    
+    with col2:
+        # Withdrawal Percentage
+        withdrawl_percentage = st.number_input(
+            label='💸 Corpus Withdrawal (%)',
+            step=1.0,
+            min_value=1.0,
+            max_value=60.0,
+            value=DEFAULT_WITHDRAWL_PERCENTAGE,
+            help='Percentage of corpus to withdraw at retirement'
+        )
+    
+    with col3:
+        # Maximum Gratuity
+        max_gratuity = st.number_input(
+            label='🎁 Maximum Gratuity (₹)',
+            help='Government-capped gratuity amount',
+            step=100000,
+            min_value=2500000,
+            max_value=100000000,
+            value=DEFAULT_MAX_GRATUITY
+        )
+    
     # Investment Strategy Selection
     investment_option = st.selectbox(
         label='🎯 Investment Strategy',
@@ -580,50 +621,115 @@ with tab4:
             st.metric("Corporate", f"{C_final:.1f}%")
             st.metric("Government", f"{G_final:.1f}%")
             st.metric("Total", f"{E_final + C_final + G_final:.1f}%")
+            
+            # Yearwise Allocation Table and Plot
+            st.markdown("---")
+            st.markdown("**📈 Yearwise Allocation Progression**")
+            
+            # Calculate years of service for allocation progression
+            if 'doj' in locals() and 'dor' in locals():
+                try:
+                    doj_date = parse_date(doj)
+                    dor_date = parse_date(dor)
+                    years_of_service = (dor_date - doj_date).days / 365.25
+                    
+                    # Create yearwise allocation data
+                    years = list(range(int(doj_date.year), int(dor_date.year) + 1))
+                    allocation_data = []
+                    
+                    for year in years:
+                        # Linear interpolation between initial and final allocations
+                        progress = (year - doj_date.year) / years_of_service if years_of_service > 0 else 0
+                        progress = min(1.0, max(0.0, progress))  # Clamp between 0 and 1
+                        
+                        E_year = E_initial + (E_final - E_initial) * progress
+                        C_year = C_initial + (C_final - C_initial) * progress
+                        G_year = G_initial + (G_final - G_initial) * progress
+                        
+                        allocation_data.append({
+                            'Year': year,
+                            'Equity (%)': round(E_year, 1),
+                            'Corporate (%)': round(C_year, 1),
+                            'Government (%)': round(G_year, 1),
+                            'Total (%)': round(E_year + C_year + G_year, 1)
+                        })
+                    
+                    # Display yearwise allocation table
+                    if allocation_data:
+                        df_allocation = pd.DataFrame(allocation_data)
+                        st.dataframe(
+                            df_allocation,
+                            hide_index=True,
+                            use_container_width=True,
+                            column_config={
+                                "Year": st.column_config.NumberColumn("Year", format="%d"),
+                                "Equity (%)": st.column_config.NumberColumn("Equity (%)", format="%.1f%%"),
+                                "Corporate (%)": st.column_config.NumberColumn("Corporate (%)", format="%.1f%%"),
+                                "Government (%)": st.column_config.NumberColumn("Government (%)", format="%.1f%%"),
+                                "Total (%)": st.column_config.NumberColumn("Total (%)", format="%.1f%%")
+                            }
+                        )
+                        
+                        # Create allocation progression plot
+                        fig_allocation = go.Figure()
+                        
+                        # Add traces for each asset class
+                        fig_allocation.add_trace(go.Scatter(
+                            x=[row['Year'] for row in allocation_data],
+                            y=[row['Equity (%)'] for row in allocation_data],
+                            mode='lines+markers',
+                            name='Equity',
+                            line=dict(color='#ff9800', width=3),
+                            marker=dict(size=6)
+                        ))
+                        
+                        fig_allocation.add_trace(go.Scatter(
+                            x=[row['Year'] for row in allocation_data],
+                            y=[row['Corporate (%)'] for row in allocation_data],
+                            mode='lines+markers',
+                            name='Corporate',
+                            line=dict(color='#2196f3', width=3),
+                            marker=dict(size=6)
+                        ))
+                        
+                        fig_allocation.add_trace(go.Scatter(
+                            x=[row['Year'] for row in allocation_data],
+                            y=[row['Government (%)'] for row in allocation_data],
+                            mode='lines+markers',
+                            name='Government',
+                            line=dict(color='#4caf50', width=3),
+                            marker=dict(size=6)
+                        ))
+                        
+                        # Update layout
+                        fig_allocation.update_layout(
+                            title="Asset Allocation Progression Over Years",
+                            xaxis_title="Year",
+                            yaxis_title="Allocation Percentage (%)",
+                            height=400,
+                            showlegend=True,
+                            template='plotly_white',
+                            legend=dict(
+                                orientation="h",
+                                yanchor="bottom",
+                                y=1.02,
+                                xanchor="center",
+                                x=0.5
+                            ),
+                            yaxis=dict(
+                                range=[0, 100],
+                                tickformat=".0f"
+                            )
+                        )
+                        
+                        st.plotly_chart(fig_allocation, use_container_width=True)
+                        
+                except Exception as e:
+                    st.warning(f"⚠️ Could not calculate yearwise allocation: {str(e)}")
         else:
             st.info("💡 Set allocation percentages in Financial Parameters tab to see details here")
 
-# Retirement Options Section
-st.markdown("---")
-st.markdown("### 💰 Retirement Options")
 
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    # Annuity Rate
-    retirement_year = parse_date(dor).year + 0.5 if parse_date(dor).month >= 7 else parse_date(dor).month
-    inflation_at_retirement = 6.0  # Default value
-    
-    annuity_rate = st.number_input(
-        label='📊 Annuity Rate (%)',
-        step=0.1,
-        min_value=1.0,
-        max_value=10.0,
-        value=inflation_at_retirement + 1,
-        help='Rate for converting NPS corpus to monthly pension'
-    )
-
-with col2:
-    # Withdrawal Percentage
-    withdrawl_percentage = st.number_input(
-        label='💸 Corpus Withdrawal (%)',
-        step=1.0,
-        min_value=1.0,
-        max_value=60.0,
-        value=DEFAULT_WITHDRAWL_PERCENTAGE,
-        help='Percentage of corpus to withdraw at retirement'
-    )
-
-with col3:
-    # Maximum Gratuity
-    max_gratuity = st.number_input(
-        label='🎁 Maximum Gratuity (₹)',
-        help='Government-capped gratuity amount',
-        step=100000,
-        min_value=2500000,
-        max_value=100000000,
-        value=DEFAULT_MAX_GRATUITY
-    )
 
 # Calculate Results Button
 st.markdown("---")
