@@ -75,7 +75,7 @@ Open your browser and navigate to: **http://localhost:8501**
 
 #### Service Type
 - **Options**: 
-  - `IFS (AIS)` - Indian Foreign Service (All India Service)
+  - `IFS (AIS)` - Indian Forest Service (All India Service)
   - `IAS` - Indian Administrative Service
   - `IPS` - Indian Police Service
   - `Other Central Services`
