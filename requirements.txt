@@ -1,3 +1,6 @@
 pyxirr
 babel
 altair
+plotly
+pandas
+streamlit
