@@ -768,84 +768,100 @@ if calculate_button:
     # Visualizations
     st.markdown("## 📈 Visual Analysis")
     
-    # Corpus Growth Chart
-    st.markdown("### 💰 Corpus Growth Over Time")
+    # Combined Financial Analysis Chart
+    st.markdown("### 💰 Financial Analysis Overview")
     
     yearly_corpus_nps = all_data_nps['yearly_corpus']
     yearly_corpus_ups = all_data_ups['yearly_corpus']
-    
-    # Create Plotly chart for corpus growth
-    fig_corpus = go.Figure()
-    
-    # Add UPS line
-    fig_corpus.add_trace(go.Scatter(
-        x=list(yearly_corpus_ups.keys()),
-        y=list(yearly_corpus_ups.values()),
-        mode='lines+markers',
-        name='UPS',
-        line=dict(color='#2196f3', width=3),
-        marker=dict(size=6)
-    ))
-    
-    # Add NPS line
-    fig_corpus.add_trace(go.Scatter(
-        x=list(yearly_corpus_nps.keys()),
-        y=list(yearly_corpus_nps.values()),
-        mode='lines+markers',
-        name='NPS',
-        line=dict(color='#4caf50', width=3),
-        marker=dict(size=6)
-    ))
-    
-    fig_corpus.update_layout(
-        title="Corpus Growth Comparison",
-        xaxis_title="Year",
-        yaxis_title="Corpus Amount (₹)",
-        hovermode='x unified',
-        template='plotly_white',
-        height=500
-    )
-    
-    st.plotly_chart(fig_corpus, use_container_width=True)
-    
-    # Pension Projection Chart
-    st.markdown("### 📊 Future Pension Projection")
-    
     future_pension_matrix_nps = all_data_nps['future_pension_matrix']
     future_pension_matrix_ups = all_data_ups['future_pension_matrix']
     
-    fig_pension = go.Figure()
-    
-    # Add UPS pension line
-    fig_pension.add_trace(go.Scatter(
-        x=list(future_pension_matrix_ups.keys()),
-        y=list(future_pension_matrix_ups.values()),
-        mode='lines+markers',
-        name='UPS Pension',
-        line=dict(color='#2196f3', width=3),
-        marker=dict(size=6)
-    ))
-    
-    # Add NPS pension line
-    fig_pension.add_trace(go.Scatter(
-        x=list(future_pension_matrix_nps.keys()),
-        y=list(future_pension_matrix_nps.values()),
-        mode='lines+markers',
-        name='NPS Pension',
-        line=dict(color='#4caf50', width=3),
-        marker=dict(size=6)
-    ))
-    
-    fig_pension.update_layout(
-        title="Monthly Pension Projection",
-        xaxis_title="Year",
-        yaxis_title="Monthly Pension (₹)",
-        hovermode='x unified',
-        template='plotly_white',
-        height=500
+    # Create combined subplot chart
+    fig_combined = make_subplots(
+        rows=2, cols=1,
+        subplot_titles=('Corpus Growth Comparison', 'Monthly Pension Projection'),
+        vertical_spacing=0.1,
+        specs=[[{"secondary_y": False}], [{"secondary_y": False}]]
     )
     
-    st.plotly_chart(fig_pension, use_container_width=True)
+    # Corpus Growth - UPS
+    fig_combined.add_trace(
+        go.Scatter(
+            x=list(yearly_corpus_ups.keys()),
+            y=list(yearly_corpus_ups.values()),
+            mode='lines+markers',
+            name='UPS Corpus',
+            line=dict(color='#2196f3', width=3),
+            marker=dict(size=6),
+            showlegend=True
+        ),
+        row=1, col=1
+    )
+    
+    # Corpus Growth - NPS
+    fig_combined.add_trace(
+        go.Scatter(
+            x=list(yearly_corpus_nps.keys()),
+            y=list(yearly_corpus_nps.values()),
+            mode='lines+markers',
+            name='NPS Corpus',
+            line=dict(color='#4caf50', width=3),
+            marker=dict(size=6),
+            showlegend=True
+        ),
+        row=1, col=1
+    )
+    
+    # Pension Projection - UPS
+    fig_combined.add_trace(
+        go.Scatter(
+            x=list(future_pension_matrix_ups.keys()),
+            y=list(future_pension_matrix_ups.values()),
+            mode='lines+markers',
+            name='UPS Pension',
+            line=dict(color='#2196f3', width=3, dash='dash'),
+            marker=dict(size=6),
+            showlegend=True
+        ),
+        row=2, col=1
+    )
+    
+    # Pension Projection - NPS
+    fig_combined.add_trace(
+        go.Scatter(
+            x=list(future_pension_matrix_nps.keys()),
+            y=list(future_pension_matrix_nps.values()),
+            mode='lines+markers',
+            name='NPS Pension',
+            line=dict(color='#4caf50', width=3, dash='dash'),
+            marker=dict(size=6),
+            showlegend=True
+        ),
+        row=2, col=1
+    )
+    
+    # Update layout for combined chart
+    fig_combined.update_layout(
+        title="Financial Analysis: Corpus Growth & Pension Projection",
+        height=800,
+        showlegend=True,
+        template='plotly_white',
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        )
+    )
+    
+    # Update axes labels
+    fig_combined.update_xaxes(title_text="Year", row=1, col=1)
+    fig_combined.update_xaxes(title_text="Year", row=2, col=1)
+    fig_combined.update_yaxes(title_text="Corpus Amount (₹)", row=1, col=1)
+    fig_combined.update_yaxes(title_text="Monthly Pension (₹)", row=2, col=1)
+    
+    st.plotly_chart(fig_combined, use_container_width=True)
     
     # Recommendation Section
     st.markdown("## 🎯 Recommendation")
