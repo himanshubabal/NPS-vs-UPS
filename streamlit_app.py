@@ -480,8 +480,8 @@ with tab2:
         total_initial = user_E_taper_initial + user_C_taper_initial + user_G_taper_initial
         total_final = user_E_taper_final + user_C_taper_final + user_G_taper_final
         
+        # Normalize allocation percentages without showing warnings
         if abs(total_initial - 100.0) > 0.01:
-            st.warning(f"⚠️ Initial allocation percentages sum to {total_initial}%. Normalizing to 100%.")
             E_initial = (user_E_taper_initial / total_initial) * 100.0
             C_initial = (user_C_taper_initial / total_initial) * 100.0
             G_initial = (user_G_taper_initial / total_initial) * 100.0
@@ -491,7 +491,6 @@ with tab2:
             G_initial = user_G_taper_initial
             
         if abs(total_final - 100.0) > 0.01:
-            st.warning(f"⚠️ Final allocation percentages sum to {total_final}%. Normalizing to 100%.")
             E_final = (user_E_taper_final / total_final) * 100.0
             C_final = (user_C_taper_final / total_final) * 100.0
             G_final = (user_G_taper_final / total_final) * 100.0
@@ -552,7 +551,7 @@ with tab4:
     )
     
     # Display Investment Strategy Details and Allocation
-    col1, col2, col3 = st.columns([1, 1, 1])
+    col1, col2 = st.columns([1, 1])
     
     with col1:
         st.markdown("#### 📈 Strategy Details")
@@ -583,42 +582,48 @@ with tab4:
             st.metric("Total", f"{E_final + C_final + G_final:.1f}%")
         else:
             st.info("💡 Set allocation percentages in Financial Parameters tab to see details here")
+
+# Retirement Options Section
+st.markdown("---")
+st.markdown("### 💰 Retirement Options")
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    # Annuity Rate
+    retirement_year = parse_date(dor).year + 0.5 if parse_date(dor).month >= 7 else parse_date(dor).month
+    inflation_at_retirement = 6.0  # Default value
     
-    with col3:
-        st.markdown("#### 💰 Retirement Options")
-        
-        # Annuity Rate
-        retirement_year = parse_date(dor).year + 0.5 if parse_date(dor).month >= 7 else parse_date(dor).year
-        inflation_at_retirement = 6.0  # Default value
-        
-        annuity_rate = st.number_input(
-            label='📊 Annuity Rate (%)',
-            step=0.1,
-            min_value=1.0,
-            max_value=10.0,
-            value=inflation_at_retirement + 1,
-            help='Rate for converting NPS corpus to monthly pension'
-        )
-        
-        # Withdrawal Percentage
-        withdrawl_percentage = st.number_input(
-            label='💸 Corpus Withdrawal (%)',
-            step=1.0,
-            min_value=1.0,
-            max_value=60.0,
-            value=DEFAULT_WITHDRAWL_PERCENTAGE,
-            help='Percentage of corpus to withdraw at retirement'
-        )
-        
-        # Maximum Gratuity
-        max_gratuity = st.number_input(
-            label='🎁 Maximum Gratuity (₹)',
-            help='Government-capped gratuity amount',
-            step=100000,
-            min_value=2500000,
-            max_value=100000000,
-            value=DEFAULT_MAX_GRATUITY
-        )
+    annuity_rate = st.number_input(
+        label='📊 Annuity Rate (%)',
+        step=0.1,
+        min_value=1.0,
+        max_value=10.0,
+        value=inflation_at_retirement + 1,
+        help='Rate for converting NPS corpus to monthly pension'
+    )
+
+with col2:
+    # Withdrawal Percentage
+    withdrawl_percentage = st.number_input(
+        label='💸 Corpus Withdrawal (%)',
+        step=1.0,
+        min_value=1.0,
+        max_value=60.0,
+        value=DEFAULT_WITHDRAWL_PERCENTAGE,
+        help='Percentage of corpus to withdraw at retirement'
+    )
+
+with col3:
+    # Maximum Gratuity
+    max_gratuity = st.number_input(
+        label='🎁 Maximum Gratuity (₹)',
+        help='Government-capped gratuity amount',
+        step=100000,
+        min_value=2500000,
+        max_value=100000000,
+        value=DEFAULT_MAX_GRATUITY
+    )
 
 # Calculate Results Button
 st.markdown("---")
