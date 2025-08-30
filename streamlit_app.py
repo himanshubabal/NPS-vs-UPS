@@ -500,21 +500,8 @@ with tab2:
             C_final = user_C_taper_final
             G_final = user_G_taper_final
         
-        # Display normalized allocation percentages
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("**📊 Initial Allocation (Normalized)**")
-            st.metric("Equity", f"{E_initial:.1f}%")
-            st.metric("Corporate", f"{C_initial:.1f}%")
-            st.metric("Government", f"{G_initial:.1f}%")
-            st.metric("Total", f"{E_initial + C_initial + G_initial:.1f}%")
-        
-        with col2:
-            st.markdown("**📊 Final Allocation (Normalized)**")
-            st.metric("Equity", f"{E_final:.1f}%")
-            st.metric("Corporate", f"{C_final:.1f}%")
-            st.metric("Government", f"{G_final:.1f}%")
-            st.metric("Total", f"{E_final + C_final + G_final:.1f}%")
+        # Store allocation percentages for use in calculations
+        # (Display moved to Investment Options section)
 
 with tab3:
     st.markdown("### 🏛️ Pay Commission Settings")
@@ -564,8 +551,8 @@ with tab4:
         help='Choose how your corpus will be invested across Equity, Corporate Bonds, and Government Bonds'
     )
     
-    # Display Investment Strategy Details
-    col1, col2 = st.columns(2)
+    # Display Investment Strategy Details and Allocation
+    col1, col2, col3 = st.columns([1, 1, 1])
     
     with col1:
         st.markdown("#### 📈 Strategy Details")
@@ -579,6 +566,25 @@ with tab4:
         st.info(strategy_descriptions.get(investment_option, 'Custom investment strategy'))
     
     with col2:
+        st.markdown("#### 📊 Asset Allocation")
+        
+        # Display normalized allocation percentages
+        if 'E_initial' in locals() and 'E_final' in locals():
+            st.markdown("**Initial Allocation**")
+            st.metric("Equity", f"{E_initial:.1f}%")
+            st.metric("Corporate", f"{C_initial:.1f}%")
+            st.metric("Government", f"{G_initial:.1f}%")
+            st.metric("Total", f"{E_initial + C_initial + G_initial:.1f}%")
+            
+            st.markdown("**Final Allocation**")
+            st.metric("Equity", f"{E_final:.1f}%")
+            st.metric("Corporate", f"{C_final:.1f}%")
+            st.metric("Government", f"{G_final:.1f}%")
+            st.metric("Total", f"{E_final + C_final + G_final:.1f}%")
+        else:
+            st.info("💡 Set allocation percentages in Financial Parameters tab to see details here")
+    
+    with col3:
         st.markdown("#### 💰 Retirement Options")
         
         # Annuity Rate
@@ -607,11 +613,11 @@ with tab4:
         # Maximum Gratuity
         max_gratuity = st.number_input(
             label='🎁 Maximum Gratuity (₹)',
+            help='Government-capped gratuity amount',
             step=100000,
             min_value=2500000,
             max_value=100000000,
-            value=DEFAULT_MAX_GRATUITY,
-            help='Government-capped gratuity amount'
+            value=DEFAULT_MAX_GRATUITY
         )
 
 # Calculate Results Button
