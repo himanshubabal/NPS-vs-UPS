@@ -79,12 +79,12 @@ DATA_FOLDER_PATH = 'assets/data/'
 
 # Main 7th CPC pay matrix file
 # This contains the basic pay structure for all levels and years
-PAY_MATRIX_7CPC_CSV = 'assets/data/7th_CPC.csv'
+PAY_MATRIX_7CPC_CSV = '7th_CPC.csv'
 
 # Historical DA (Dearness Allowance) data files
 # These contain actual DA percentages from 6th and 7th CPC periods
-SIXTH_PC_DA_FILE = 'assets/data/6th_CPC_DA.csv'
-SEVENTH_PC_DA_FILE = 'assets/data/7th_CPC_DA.csv'
+SIXTH_PC_DA_FILE = '6th_CPC_DA.csv'
+SEVENTH_PC_DA_FILE = '7th_CPC_DA.csv'
 
 # Year ranges for historical DA data
 # 6th CPC: 2006-2015 (with half-year precision)
