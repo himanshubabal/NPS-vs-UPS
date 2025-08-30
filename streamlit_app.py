@@ -42,6 +42,22 @@ with open('styles/main.css', 'r') as f:
 
 st.markdown(f'<style>{css_content}</style>', unsafe_allow_html=True)
 
+# Development Disclaimer
+st.markdown("""
+<div class="development-disclaimer">
+    <h2>⚠️ DEVELOPMENT VERSION</h2>
+    <p class="main-text">
+        <strong>This application is currently under active development and may contain bugs or inaccuracies.</strong>
+    </p>
+    <p class="sub-text">
+        Results should not be considered final or used for official pension planning decisions.
+    </p>
+    <p class="note-text">
+        Please report any issues or bugs you encounter.
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
 # Main Header
 st.markdown("""
 <div class="main-header">

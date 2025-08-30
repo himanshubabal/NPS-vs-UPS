@@ -207,3 +207,42 @@ code {
     color: #fafafa !important;
     border: 1px solid #444 !important;
 }
+
+/* Development disclaimer styling */
+.development-disclaimer {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%) !important;
+    color: white !important;
+    padding: 1.5rem !important;
+    border-radius: 15px !important;
+    margin: 1rem 0 !important;
+    text-align: center !important;
+    border: 3px solid #ff4757 !important;
+    box-shadow: 0 8px 32px rgba(255, 107, 107, 0.3) !important;
+}
+
+.development-disclaimer h2 {
+    margin: 0 0 1rem 0 !important;
+    font-size: 1.8rem !important;
+    color: white !important;
+}
+
+.development-disclaimer p {
+    margin: 0.5rem 0 0 0 !important;
+    color: white !important;
+}
+
+.development-disclaimer .main-text {
+    font-size: 1.2rem !important;
+    font-weight: 500 !important;
+    margin: 0 0 1rem 0 !important;
+}
+
+.development-disclaimer .sub-text {
+    font-size: 1rem !important;
+    opacity: 0.9 !important;
+}
+
+.development-disclaimer .note-text {
+    font-size: 0.9rem !important;
+    opacity: 0.8 !important;
+}
