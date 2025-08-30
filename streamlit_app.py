@@ -211,9 +211,7 @@ with tab1:
         st.markdown("#### 🚀 Promotion Schedule")
         st.info(f"📅 Years of service: {years_of_service:.1f} years (from {joining_year} to {retirement_date.year})")
         
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
+        with st.container():
             starting_level_index = PAY_LEVELS.index(str(starting_level))
             max_possible_promotions = len(PAY_LEVELS) - starting_level_index - 1
             
@@ -222,11 +220,11 @@ with tab1:
             
             if max_promotions > 0:
                 st.markdown("**Set your promotion timeline:**")
-                st.caption(f"💡 Default timeline: {'→'.join(map(str, DEFAULT_PROMOTION_TIMELINE))} years (total: {sum(DEFAULT_PROMOTION_TIMELINE)} years)")
+                st.caption(f"💡 Default timeline: {' → '.join(map(str, DEFAULT_PROMOTION_TIMELINE))} years (total: {sum(DEFAULT_PROMOTION_TIMELINE)} years)")
                 
-                # Initialize number of promotions
+                # Initialize number of promotions - show all applicable by default
                 if 'num_promotions' not in st.session_state:
-                    st.session_state.num_promotions = min(3, max_promotions)
+                    st.session_state.num_promotions = max_promotions
                 
                 prom_level, prom_period = [], []
                 for curr_level in range(st.session_state.num_promotions):
@@ -277,7 +275,7 @@ with tab1:
                 with col_add:
                     if st.button("➕ Add Promotion", key="add_promotion"):
                         if 'num_promotions' not in st.session_state:
-                            st.session_state.num_promotions = min(3, max_promotions)  # Start with 3 or max available
+                            st.session_state.num_promotions = max_promotions  # Start with all available
                         else:
                             st.session_state.num_promotions = min(st.session_state.num_promotions + 1, max_promotions)
                         st.rerun()
@@ -291,6 +289,30 @@ with tab1:
                 if len(prom_period) == 0:
                     prom_period = DEFAULT_PROMOTION_TIMELINE[:max_promotions]
                     st.info("ℹ️ Using default promotion schedule")
+                
+                # Career Summary moved here to expand horizontal space
+                st.markdown("---")
+                st.markdown("#### 📊 Career Summary")
+                col_summary1, col_summary2, col_summary3 = st.columns(3)
+                
+                with col_summary1:
+                    st.metric("Starting Level", starting_level)
+                    st.metric("Starting Year", starting_year)
+                
+                with col_summary2:
+                    st.metric("Years of Service", f"{years_of_service:.1f}")
+                    st.metric("Max Possible Promotions", max_promotions)
+                
+                with col_summary3:
+                    if len(prom_period) > 0:
+                        st.metric("Total Promotion Years", f"{sum(prom_period)} years")
+                        st.metric("Final Year", f"{joining_year + sum(prom_period)}")
+                    else:
+                        st.metric("Total Promotion Years", "N/A")
+                        st.metric("Final Year", "N/A")
+                
+                if len(prom_period) > 0:
+                    st.metric("Avg Promotion Time", f"{sum(prom_period)/len(prom_period):.1f} years")
                 
                 # Show promotion timeline summary
                 if len(prom_period) > 0:
