@@ -1025,14 +1025,12 @@ if calculate_button:
             template='plotly_white',
             xaxis=dict(title="Year"),
             yaxis=dict(
-                title="Basic Pay (₹)",
-                titlefont=dict(color="#ff9800"),
+                title=dict(text="Basic Pay (₹)", font=dict(color="#ff9800")),
                 tickfont=dict(color="#ff9800"),
                 side="left"
             ),
             yaxis2=dict(
-                title="Pay Level",
-                titlefont=dict(color="#9c27b0"),
+                title=dict(text="Pay Level", font=dict(color="#9c27b0")),
                 tickfont=dict(color="#9c27b0"),
                 side="right",
                 overlaying="y",
