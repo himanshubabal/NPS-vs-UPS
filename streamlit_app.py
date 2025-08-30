@@ -213,6 +213,7 @@ with tab1:
             
             if max_promotions > 0:
                 st.markdown("**Set your promotion timeline:**")
+                st.caption(f"💡 Default timeline: {'→'.join(map(str, DEFAULT_PROMOTION_TIMELINE))} years (total: {sum(DEFAULT_PROMOTION_TIMELINE)} years)")
                 
                 prom_level, prom_period = [], []
                 for curr_level in range(max_promotions):
@@ -227,11 +228,15 @@ with tab1:
                         )
                     
                     with col_prom_year:
+                        # Default promotion timeline from constants
+                        default_timeline = DEFAULT_PROMOTION_TIMELINE
+                        default_value = default_timeline[curr_level] if curr_level < len(default_timeline) else 5
+                        
                         prom_year = st.number_input(
                             f'Years to reach Level {next_level}',
                             min_value=1,
                             max_value=20,
-                            value=4 if curr_level < 3 else 5,
+                            value=default_value,
                             key=f'col_prom_year_{curr_level}',
                             help=f'How many years to reach Level {next_level}'
                         )
@@ -241,11 +246,11 @@ with tab1:
                         prom_period.append(prom_year)
                 
                 if len(prom_period) == 0:
-                    prom_period = [4, 5, 4, 1, 4, 7, 5, 3]
+                    prom_period = DEFAULT_PROMOTION_TIMELINE
                     st.info("ℹ️ Using default promotion schedule")
             else:
                 st.info("🎯 You're already at the highest pay level")
-                prom_period = [4, 5, 4, 1, 4, 7, 5, 3]
+                prom_period = DEFAULT_PROMOTION_TIMELINE
         
         with col2:
             st.markdown("#### 📊 Career Summary")

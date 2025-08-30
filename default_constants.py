@@ -65,6 +65,11 @@ DEFAULT_PC_INCREASE_PERCENT_LIST = [DEFAULT_PC_INCREASE_PERCENT] * 5
 # IAS officers skip certain levels (13A, 16) during promotions
 DEFAULT_IS_IAS = False
 
+# Default promotion timeline for career progression
+# Represents years to reach next level: [4, 5, 4, 1, 4, 7, 5, 3]
+# Total career duration: 33 years, Average: 4.1 years per promotion
+DEFAULT_PROMOTION_TIMELINE = [4, 5, 4, 1, 4, 7, 5, 3]
+
 # =============================================================================
 # SYSTEM DATES AND PATHS
 # =============================================================================
