@@ -221,17 +221,27 @@ with tab1:
             if max_promotions > 0:
                 st.markdown("**Set your promotion timeline:**")
                 st.caption(f"💡 Default timeline: {' → '.join(map(str, DEFAULT_PROMOTION_TIMELINE))} years (total: {sum(DEFAULT_PROMOTION_TIMELINE)} years)")
+                st.caption(f"📅 **Note**: By default, showing only promotions that fit within your {years_of_service:.1f} years of service")
                 
-                # Initialize number of promotions - show all applicable by default
+                # Initialize number of promotions - show only what fits within service duration
                 if 'num_promotions' not in st.session_state:
-                    st.session_state.num_promotions = max_promotions
+                    # Calculate how many promotions can fit within service years
+                    cumulative_years = 0
+                    max_fitting_promotions = 0
+                    for i, years in enumerate(DEFAULT_PROMOTION_TIMELINE):
+                        if cumulative_years + years <= years_of_service:
+                            max_fitting_promotions = i + 1
+                            cumulative_years += years
+                        else:
+                            break
+                    st.session_state.num_promotions = max_fitting_promotions
                 
                 prom_level, prom_period = [], []
                 for curr_level in range(st.session_state.num_promotions):
                     st.markdown(f"---")
                     st.markdown(f"**Promotion {curr_level + 1}:**")
                     
-                    col_prom_level, col_prom_year, col_prom_info = st.columns([1, 1, 2])
+                    col_prom_level, col_prom_year, col_prom_info = st.columns([1.2, 1.2, 1.6])
                     
                     with col_prom_level:
                         next_level = st.selectbox(
@@ -349,7 +359,8 @@ with tab1:
                     
                     if timeline_data:
                         timeline_df = pd.DataFrame(timeline_data)
-                        st.dataframe(timeline_df, use_container_width=True)
+                        # Remove the index column for cleaner display
+                        st.dataframe(timeline_df.set_index('Promotion'), use_container_width=True)
                         
                         # Show final career summary
                         final_year = joining_year + sum(prom_period)
@@ -358,16 +369,7 @@ with tab1:
                 st.info("🎯 You're already at the highest pay level or service period too short for promotions")
                 prom_period = DEFAULT_PROMOTION_TIMELINE[:max_promotions] if max_promotions > 0 else []
         
-        with col2:
-            st.markdown("#### 📊 Career Summary")
-            st.metric("Starting Level", starting_level)
-            st.metric("Starting Year", starting_year)
-            st.metric("Years of Service", f"{years_of_service:.1f}")
-            st.metric("Max Possible Promotions", max_promotions)
-            if len(prom_period) > 0:
-                st.metric("Total Promotion Years", f"{sum(prom_period)} years")
-                st.metric("Avg Promotion Time", f"{sum(prom_period)/len(prom_period):.1f} years")
-                st.metric("Final Year", f"{joining_year + sum(prom_period)}")
+
 
 with tab2:
     st.markdown("### 💰 Financial Parameters")
