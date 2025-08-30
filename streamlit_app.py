@@ -203,25 +203,57 @@ with tab1:
         joining_year = parse_date(doj).year
         st.info(f"🎯 Your career will start from Pay Level {starting_level} in year {joining_year}")
         
+        # Calculate years of service
+        retirement_date = get_retirement_date(dob)
+        years_of_service = (retirement_date - parse_date(doj)).days / 365.25
+        
         # Promotion Schedule
         st.markdown("#### 🚀 Promotion Schedule")
+        st.info(f"📅 Years of service: {years_of_service:.1f} years (from {joining_year} to {retirement_date.year})")
+        
         col1, col2 = st.columns([2, 1])
         
         with col1:
             starting_level_index = PAY_LEVELS.index(str(starting_level))
-            max_promotions = len(PAY_LEVELS) - starting_level_index - 1
+            max_possible_promotions = len(PAY_LEVELS) - starting_level_index - 1
+            
+            # Limit promotions to actual service years
+            max_promotions = min(max_possible_promotions, int(years_of_service))
             
             if max_promotions > 0:
                 st.markdown("**Set your promotion timeline:**")
                 st.caption(f"💡 Default timeline: {'→'.join(map(str, DEFAULT_PROMOTION_TIMELINE))} years (total: {sum(DEFAULT_PROMOTION_TIMELINE)} years)")
                 
+                # Add/Remove promotion controls
+                col_add, col_remove = st.columns([1, 1])
+                with col_add:
+                    if st.button("➕ Add Promotion", key="add_promotion"):
+                        if 'num_promotions' not in st.session_state:
+                            st.session_state.num_promotions = min(3, max_promotions)  # Start with 3 or max available
+                        else:
+                            st.session_state.num_promotions = min(st.session_state.num_promotions + 1, max_promotions)
+                        st.rerun()
+                
+                with col_remove:
+                    if st.button("➖ Remove Promotion", key="remove_promotion"):
+                        if 'num_promotions' in st.session_state:
+                            st.session_state.num_promotions = max(1, st.session_state.num_promotions - 1)
+                            st.rerun()
+                
+                # Initialize number of promotions
+                if 'num_promotions' not in st.session_state:
+                    st.session_state.num_promotions = min(3, max_promotions)
+                
                 prom_level, prom_period = [], []
-                for curr_level in range(max_promotions):
+                for curr_level in range(st.session_state.num_promotions):
+                    st.markdown(f"---")
+                    st.markdown(f"**Promotion {curr_level + 1}:**")
+                    
                     col_prom_level, col_prom_year = st.columns(2)
                     
                     with col_prom_level:
                         next_level = st.selectbox(
-                            f'Next Level {curr_level + 1}',
+                            f'Next Level',
                             options=PAY_LEVELS[starting_level_index + curr_level + 1:],
                             key=f'col_level_year_{curr_level}',
                             help=f'Select the next pay level after {starting_level}'
@@ -235,30 +267,72 @@ with tab1:
                         prom_year = st.number_input(
                             f'Years to reach Level {next_level}',
                             min_value=1,
-                            max_value=20,
+                            max_value=int(years_of_service),
                             value=default_value,
                             key=f'col_prom_year_{curr_level}',
                             help=f'How many years to reach Level {next_level}'
                         )
                     
+                    # Show promotion year
                     if next_level and prom_year:
+                        # Validate total promotion years don't exceed service years
+                        total_promotion_years = sum(prom_period) + prom_year
+                        if total_promotion_years > years_of_service:
+                            st.error(f"⚠️ **Warning**: Total promotion years ({total_promotion_years:.1f}) exceeds your service period ({years_of_service:.1f} years)")
+                        else:
+                            promotion_year = joining_year + total_promotion_years
+                            st.success(f"🎯 **Level {next_level} in {promotion_year}** (after {prom_year} years)")
+                        
                         prom_level.append(next_level)
                         prom_period.append(prom_year)
                 
                 if len(prom_period) == 0:
-                    prom_period = DEFAULT_PROMOTION_TIMELINE
+                    prom_period = DEFAULT_PROMOTION_TIMELINE[:max_promotions]
                     st.info("ℹ️ Using default promotion schedule")
+                
+                # Show promotion timeline summary
+                if len(prom_period) > 0:
+                    st.markdown("---")
+                    st.markdown("#### 📅 Promotion Timeline Summary")
+                    
+                    timeline_data = []
+                    cumulative_years = 0
+                    current_level = starting_level
+                    
+                    for i, (level, years) in enumerate(zip(prom_level, prom_period)):
+                        cumulative_years += years
+                        promotion_year = joining_year + cumulative_years
+                        timeline_data.append({
+                            "Promotion": i + 1,
+                            "From Level": current_level,
+                            "To Level": level,
+                            "Years": years,
+                            "Year": promotion_year,
+                            "Age": parse_date(dob).year + cumulative_years - parse_date(dob).year
+                        })
+                        current_level = level
+                    
+                    if timeline_data:
+                        timeline_df = pd.DataFrame(timeline_data)
+                        st.dataframe(timeline_df, use_container_width=True)
+                        
+                        # Show final career summary
+                        final_year = joining_year + sum(prom_period)
+                        st.success(f"🎯 **Final Career Summary**: You will reach Level {current_level} in {final_year} at age {timeline_data[-1]['Age']}")
             else:
-                st.info("🎯 You're already at the highest pay level")
-                prom_period = DEFAULT_PROMOTION_TIMELINE
+                st.info("🎯 You're already at the highest pay level or service period too short for promotions")
+                prom_period = DEFAULT_PROMOTION_TIMELINE[:max_promotions] if max_promotions > 0 else []
         
         with col2:
             st.markdown("#### 📊 Career Summary")
             st.metric("Starting Level", starting_level)
             st.metric("Starting Year", starting_year)
-            st.metric("Max Promotions", max_promotions)
+            st.metric("Years of Service", f"{years_of_service:.1f}")
+            st.metric("Max Possible Promotions", max_promotions)
             if len(prom_period) > 0:
+                st.metric("Total Promotion Years", f"{sum(prom_period)} years")
                 st.metric("Avg Promotion Time", f"{sum(prom_period)/len(prom_period):.1f} years")
+                st.metric("Final Year", f"{joining_year + sum(prom_period)}")
 
 with tab2:
     st.markdown("### 💰 Financial Parameters")
