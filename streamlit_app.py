@@ -568,143 +568,124 @@ with tab4:
     # Asset Allocation Section
     st.markdown("#### 📊 Asset Allocation")
     
-    # Calculate E, C, G based on chosen investment strategy
-    if 'doj' in locals() and 'dor' in locals():
-        try:
-            doj_date = parse_date(doj)
-            dor_date = parse_date(dor)
-            years_of_service = (dor_date - doj_date).days / 365.25
-            # Fix datetime calculation - convert datetime.now() to date for subtraction
-            current_date = datetime.now().date()
-            current_age = (current_date - doj_date).days / 365.25
-            
-            # Get allocation based on investment strategy and age
-            E_initial, C_initial, G_initial = get_investment_allocation(
-                investment_option, current_age, years_of_service
-            )
-            
-            # Calculate final allocation (more conservative as retirement approaches)
-            E_final = max(0, E_initial - 20)  # Reduce equity by up to 20%
-            C_final = C_initial + (E_initial - E_final) * 0.6  # Increase corporate bonds
-            G_final = C_initial + (E_initial - E_final) * 0.4  # Increase government bonds
-            
-            # Normalize to ensure total is 100%
-            total = E_final + C_final + G_final
-            if total > 0:
-                E_final = (E_final / total) * 100
-                C_final = (C_final / total) * 100
-                G_final = (G_final / total) * 100
-            
-            st.markdown("**Initial Allocation**")
-            st.metric("Equity", f"{E_initial:.1f}%")
-            st.metric("Corporate", f"{C_initial:.1f}%")
-            st.metric("Government", f"{G_initial:.1f}%")
-            st.metric("Total", f"{E_initial + C_initial + G_initial:.1f}%")
-            
-            st.markdown("**Final Allocation**")
-            st.metric("Equity", f"{E_final:.1f}%")
-            st.metric("Corporate", f"{C_final:.1f}%")
-            st.metric("Government", f"{G_final:.1f}%")
-            st.metric("Total", f"{E_final + C_final + G_final:.1f}%")
-            
-            # Yearwise Allocation Table and Plot
-            st.markdown("---")
-            st.markdown("**📈 Yearwise Allocation Progression**")
-            
-            # Create yearwise allocation data
-            years = list(range(int(doj_date.year), int(dor_date.year) + 1))
-            allocation_data = []
-            
-            for year in years:
-                # Linear interpolation between initial and final allocations
-                progress = (year - doj_date.year) / years_of_service if years_of_service > 0 else 0
-                progress = min(1.0, max(0.0, progress))  # Clamp between 0 and 1
+    # Display allocation based on Financial Parameters tab values
+    if 'E_initial' in locals() and 'E_final' in locals():
+        st.markdown("**Initial Allocation**")
+        st.metric("Equity", f"{E_initial:.1f}%")
+        st.metric("Corporate", f"{C_initial:.1f}%")
+        st.metric("Government", f"{G_initial:.1f}%")
+        st.metric("Total", f"{E_initial + C_initial + G_initial:.1f}%")
+        
+        st.markdown("**Final Allocation**")
+        st.metric("Equity", f"{E_final:.1f}%")
+        st.metric("Corporate", f"{C_final:.1f}%")
+        st.metric("Government", f"{G_final:.1f}%")
+        st.metric("Total", f"{E_final + C_final + G_final:.1f}%")
+        
+        # Yearwise Allocation Table and Plot
+        st.markdown("---")
+        st.markdown("**📈 Yearwise Allocation Progression**")
+        
+        # Calculate years of service for allocation progression
+        if 'doj' in locals() and 'dor' in locals():
+            try:
+                doj_date = parse_date(doj)
+                dor_date = parse_date(dor)
+                years_of_service = (dor_date - doj_date).days / 365.25
                 
-                E_year = E_initial + (E_final - E_initial) * progress
-                C_year = C_initial + (C_final - C_initial) * progress
-                G_year = G_initial + (G_final - G_initial) * progress
+                # Create yearwise allocation data
+                years = list(range(int(doj_date.year), int(dor_date.year) + 1))
+                allocation_data = []
                 
-                allocation_data.append({
-                    'Year': year,
-                    'Equity (%)': round(E_year, 1),
-                    'Corporate (%)': round(C_year, 1),
-                    'Government (%)': round(G_year, 1),
-                    'Total (%)': round(E_year + C_year + G_year, 1)
-                })
-            
-            # Display yearwise allocation table
-            if allocation_data:
-                df_allocation = pd.DataFrame(allocation_data)
-                st.dataframe(
-                    df_allocation,
-                    hide_index=True,
-                    use_container_width=True,
-                    column_config={
-                        "Year": st.column_config.NumberColumn("Year", format="%d"),
-                        "Equity (%)": st.column_config.NumberColumn("Equity (%)", format="%.1f%%"),
-                        "Corporate (%)": st.column_config.NumberColumn("Corporate (%)", format="%.1f%%"),
-                        "Government (%)": st.column_config.NumberColumn("Government (%)", format="%.1f%%"),
-                        "Total (%)": st.column_config.NumberColumn("Total (%)", format="%.1f%%")
-                    }
-                )
-                
-                # Create allocation progression plot
-                fig_allocation = go.Figure()
-                
-                # Add traces for each asset class
-                fig_allocation.add_trace(go.Scatter(
-                    x=[row['Year'] for row in allocation_data],
-                    y=[row['Equity (%)'] for row in allocation_data],
-                    mode='lines+markers',
-                    name='Equity',
-                    line=dict(color='#ff9800', width=3),
-                    marker=dict(size=6)
-                ))
-                
-                fig_allocation.add_trace(go.Scatter(
-                    x=[row['Year'] for row in allocation_data],
-                    y=[row['Corporate (%)'] for row in allocation_data],
-                    mode='lines+markers',
-                    name='Corporate',
-                    line=dict(color='#2196f3', width=3),
-                    marker=dict(size=6)
-                ))
-                
-                fig_allocation.add_trace(go.Scatter(
-                    x=[row['Year'] for row in allocation_data],
-                    y=[row['Government (%)'] for row in allocation_data],
-                    mode='lines+markers',
-                    name='Government',
-                    line=dict(color='#4caf50', width=3),
-                    marker=dict(size=6)
-                ))
-                
-                # Update layout
-                fig_allocation.update_layout(
-                    title="Asset Allocation Progression Over Years",
-                    xaxis_title="Year",
-                    yaxis_title="Allocation Percentage (%)",
-                    height=400,
-                    showlegend=True,
-                    template='plotly_white',
-                    legend=dict(
-                        orientation="h",
-                        yanchor="bottom",
-                        y=1.02,
-                        xanchor="center",
-                        x=0.5
-                    ),
-                    yaxis=dict(
-                        range=[0, 100],
-                        tickformat=".0f"
-                    )
-                )
-                
-                st.plotly_chart(fig_allocation, use_container_width=True)
+                for year in years:
+                    # Linear interpolation between initial and final allocations
+                    progress = (year - doj_date.year) / years_of_service if years_of_service > 0 else 0
+                    progress = min(1.0, max(0.0, progress))  # Clamp between 0 and 1
                     
-        except Exception as e:
-            st.warning(f"⚠️ Could not calculate allocation: {str(e)}")
-            st.info("💡 Set allocation percentages in Financial Parameters tab to see details here")
+                    E_year = E_initial + (E_final - E_initial) * progress
+                    C_year = C_initial + (C_final - C_initial) * progress
+                    G_year = G_initial + (G_final - G_initial) * progress
+                    
+                    allocation_data.append({
+                        'Year': year,
+                        'Equity (%)': round(E_year, 1),
+                        'Corporate (%)': round(C_year, 1),
+                        'Government (%)': round(G_year, 1),
+                        'Total (%)': round(E_year + C_year + G_year, 1)
+                    })
+                
+                # Display yearwise allocation table
+                if allocation_data:
+                    df_allocation = pd.DataFrame(allocation_data)
+                    st.dataframe(
+                        df_allocation,
+                        hide_index=True,
+                        use_container_width=True,
+                        column_config={
+                            "Year": st.column_config.NumberColumn("Year", format="%d"),
+                            "Equity (%)": st.column_config.NumberColumn("Equity (%)", format="%.1f%%"),
+                            "Corporate (%)": st.column_config.NumberColumn("Corporate (%)", format="%.1f%%"),
+                            "Government (%)": st.column_config.NumberColumn("Government (%)", format="%.1f%%"),
+                            "Total (%)": st.column_config.NumberColumn("Total (%)", format="%.1f%%")
+                        }
+                    )
+                    
+                    # Create allocation progression plot
+                    fig_allocation = go.Figure()
+                    
+                    # Add traces for each asset class
+                    fig_allocation.add_trace(go.Scatter(
+                        x=[row['Year'] for row in allocation_data],
+                        y=[row['Equity (%)'] for row in allocation_data],
+                        mode='lines+markers',
+                        name='Equity',
+                        line=dict(color='#ff9800', width=3),
+                        marker=dict(size=6)
+                    ))
+                    
+                    fig_allocation.add_trace(go.Scatter(
+                        x=[row['Year'] for row in allocation_data],
+                        y=[row['Corporate (%)'] for row in allocation_data],
+                        mode='lines+markers',
+                        name='Corporate',
+                        line=dict(color='#2196f3', width=3),
+                        marker=dict(size=6)
+                    ))
+                    
+                    fig_allocation.add_trace(go.Scatter(
+                        x=[row['Year'] for row in allocation_data],
+                        y=[row['Government (%)'] for row in allocation_data],
+                        mode='lines+markers',
+                        name='Government',
+                        line=dict(color='#4caf50', width=3),
+                        marker=dict(size=6)
+                    ))
+                    
+                    # Update layout
+                    fig_allocation.update_layout(
+                        title="Asset Allocation Progression Over Years",
+                        xaxis_title="Year",
+                        yaxis_title="Allocation Percentage (%)",
+                        height=400,
+                            showlegend=True,
+                            template='plotly_white',
+                            legend=dict(
+                                orientation="h",
+                                yanchor="bottom",
+                                y=1.02,
+                                xanchor="center",
+                                x=0.5
+                            ),
+                            yaxis=dict(
+                                range=[0, 100],
+                                tickformat=".0f"
+                            )
+                        )
+                        
+                        st.plotly_chart(fig_allocation, use_container_width=True)
+                        
+            except Exception as e:
+                st.warning(f"⚠️ Could not calculate yearwise allocation: {str(e)}")
     else:
         st.info("💡 Set allocation percentages in Financial Parameters tab to see details here")
     
