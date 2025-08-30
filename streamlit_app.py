@@ -577,7 +577,13 @@ with tab4:
             
             # Calculate current age for lifecycle allocation
             current_date = datetime.now().date()
-            current_age = (current_date - doj_date).days / 365.25
+            # Calculate age from date of birth, not date of joining
+            if 'dob' in locals():
+                dob_date = parse_date(dob)
+                current_age = (current_date - dob_date).days / 365.25
+            else:
+                # Fallback: estimate age from date of joining (assuming typical joining age of 22-25)
+                current_age = (current_date - doj_date).days / 365.25 + 22  # Add typical joining age
             
             # Calculate corpus allocation based on investment strategy and age
             if investment_option == "Standard/Benchmark":
