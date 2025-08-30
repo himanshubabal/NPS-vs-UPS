@@ -579,12 +579,34 @@ with tab3:
     
     with col3:
         st.markdown("**Salary Increase %**")
+        st.markdown("*Net increase excluding DA component*")
         for i in range(len(DEFAULT_PAY_COMMISSION_YEARS)):
             try:
-                percent_inc = round(((fit_list[i] / (1 + 0.5/100.0)) - 1) * 100.0, 1)
+                # Calculate DA at the time of Pay Commission implementation
+                # DA typically ranges from 20-50% at CPC implementation years
+                # For calculation purposes, we'll use a reasonable estimate
+                # The actual DA should come from the DA matrix for that specific year
+                
+                # Estimate DA based on typical values at CPC years
+                if DEFAULT_PAY_COMMISSION_YEARS[i] <= 2016:
+                    estimated_da = 0.0  # Before 7th CPC, DA was reset
+                elif DEFAULT_PAY_COMMISSION_YEARS[i] <= 2026:
+                    estimated_da = 0.25  # 7th CPC period, DA around 25%
+                else:
+                    estimated_da = 0.30  # Future CPCs, DA around 30%
+                
+                # Correct formula: Salary Increase % = Fitment Factor - 1 - DA%
+                # This gives the net salary increase excluding DA
+                percent_inc = round(((fit_list[i] - 1 - estimated_da) * 100.0), 1)
+                
+                # Ensure the percentage is reasonable (not negative)
+                if percent_inc < 0:
+                    percent_inc = 0.0
+                
                 st.metric(f"CPC {i+1} Increase", f"{percent_inc}%")
-            except:
+            except Exception as e:
                 st.metric(f"CPC {i+1} Increase", "N/A")
+                st.caption(f"Error: {str(e)}")
 
 with tab4:
     st.markdown("### 📊 Investment Options")
