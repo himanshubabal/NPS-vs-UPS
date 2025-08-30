@@ -435,42 +435,89 @@ with tab2:
     else:  # Tapering Case
         st.markdown("#### 📈 Rate Tapering Configuration")
         
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("**Inflation Rates**")
+        # Create a more organized layout with better spacing
+        st.markdown("---")
+        
+        # Inflation Rates Section
+        st.markdown("**📊 Inflation Rates**")
+        col_inf1, col_inf2 = st.columns(2)
+        with col_inf1:
             user_inflation_taper_initial = st.number_input(
                 label='Initial Inflation (%)',
                 step=0.1,
                 min_value=0.0,
                 max_value=20.0,
-                value=DEFAULT_INITIAL_INFLATION_RATE
+                value=DEFAULT_INITIAL_INFLATION_RATE,
+                help='Starting inflation rate that gradually decreases over time'
             )
+        with col_inf2:
             user_inflation_taper_final = st.number_input(
                 label='Final Inflation (%)',
                 step=0.1,
                 min_value=0.0,
                 max_value=20.0,
-                value=DEFAULT_FINAL_INFLATION_RATE
+                value=DEFAULT_FINAL_INFLATION_RATE,
+                help='Ending inflation rate after the taper period'
             )
         
-        with col2:
-            st.markdown("**Investment Returns**")
-            col_E, col_C, col_G = st.columns(3)
-            
-            with col_E:
-                st.markdown("**Equity**")
-                user_E_taper_initial = st.number_input('Initial (%)', value=DEFAULT_E_INITIAL, key='E_taper_initial')
-                user_E_taper_final = st.number_input('Final (%)', value=DEFAULT_E_FINAL, key='E_taper_final')
-            
-            with col_C:
-                st.markdown("**Corporate**")
-                user_C_taper_initial = st.number_input('Initial (%)', value=DEFAULT_C_INITIAL, key='C_taper_initial')
-                user_C_taper_final = st.number_input('Final (%)', value=DEFAULT_C_FINAL, key='C_taper_final')
-            
-            with col_G:
-                st.markdown("**Government**")
-                user_G_taper_initial = st.number_input('Initial (%)', value=DEFAULT_G_INITIAL, key='G_taper_initial')
-                user_G_taper_final = st.number_input('Final (%)', value=DEFAULT_G_FINAL, key='G_taper_final')
+        st.markdown("---")
+        
+        # Investment Returns Section
+        st.markdown("**💰 Investment Returns**")
+        st.markdown("*Returns that gradually decrease from initial to final values over the taper period*")
+        
+        # Create a more organized 3-column layout for investment returns
+        col_E, col_C, col_G = st.columns(3)
+        
+        with col_E:
+            st.markdown("**📈 Equity Returns**")
+            st.markdown("*Higher returns, higher risk*")
+            user_E_taper_initial = st.number_input(
+                'Initial (%)', 
+                value=DEFAULT_E_INITIAL, 
+                key='E_taper_initial',
+                help='Starting equity return rate'
+            )
+            user_E_taper_final = st.number_input(
+                'Final (%)', 
+                value=DEFAULT_E_FINAL, 
+                key='E_taper_final',
+                help='Ending equity return rate'
+            )
+        
+        with col_C:
+            st.markdown("**🏢 Corporate Bond Returns**")
+            st.markdown("*Medium returns, medium risk*")
+            user_C_taper_initial = st.number_input(
+                'Initial (%)', 
+                value=DEFAULT_C_INITIAL, 
+                key='C_taper_initial',
+                help='Starting corporate bond return rate'
+            )
+            user_C_taper_final = st.number_input(
+                'Final (%)', 
+                value=DEFAULT_C_FINAL, 
+                key='C_taper_final',
+                help='Ending corporate bond return rate'
+            )
+        
+        with col_G:
+            st.markdown("**🏛️ Government Bond Returns**")
+            st.markdown("*Lower returns, lower risk*")
+            user_G_taper_initial = st.number_input(
+                'Initial (%)', 
+                value=DEFAULT_G_INITIAL, 
+                key='G_taper_initial',
+                help='Starting government bond return rate'
+            )
+            user_G_taper_final = st.number_input(
+                'Final (%)', 
+                value=DEFAULT_G_FINAL, 
+                key='G_taper_final',
+                help='Ending government bond return rate'
+            )
+        
+        st.markdown("---")
         
         # Set tapering rates
         initial_inflation_rate = user_inflation_taper_initial
