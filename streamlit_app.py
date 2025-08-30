@@ -568,126 +568,241 @@ with tab4:
     # Asset Allocation Section
     st.markdown("#### 📊 Asset Allocation")
     
-    # Display allocation based on Financial Parameters tab values
-    if 'E_initial' in locals() and 'E_final' in locals():
-        st.markdown("**Initial Allocation**")
-        st.metric("Equity", f"{E_initial:.1f}%")
-        st.metric("Corporate", f"{C_initial:.1f}%")
-        st.metric("Government", f"{G_initial:.1f}%")
-        st.metric("Total", f"{E_initial + C_initial + G_initial:.1f}%")
-        
-        st.markdown("**Final Allocation**")
-        st.metric("Equity", f"{E_final:.1f}%")
-        st.metric("Corporate", f"{C_final:.1f}%")
-        st.metric("Government", f"{G_final:.1f}%")
-        st.metric("Total", f"{E_final + C_final + G_final:.1f}%")
-        
-        # Yearwise Allocation Table and Plot
-        st.markdown("---")
-        st.markdown("**📈 Yearwise Allocation Progression**")
-        
-        # Calculate years of service for allocation progression
-        if 'doj' in locals() and 'dor' in locals():
-            try:
-                doj_date = parse_date(doj)
-                dor_date = parse_date(dor)
-                years_of_service = (dor_date - doj_date).days / 365.25
+    # Calculate corpus allocation based on investment strategy and user demographics
+    if 'doj' in locals() and 'dor' in locals() and 'investment_option' in locals():
+        try:
+            doj_date = parse_date(doj)
+            dor_date = parse_date(dor)
+            years_of_service = (dor_date - doj_date).days / 365.25
+            
+            # Calculate current age for lifecycle allocation
+            current_date = datetime.now().date()
+            current_age = (current_date - doj_date).days / 365.25
+            
+            # Calculate corpus allocation based on investment strategy and age
+            if investment_option == "Standard/Benchmark":
+                # Conservative allocation: 15% equity, 60% corporate, 25% government
+                E_initial = 15.0
+                C_initial = 60.0
+                G_initial = 25.0
+                # No change over time
+                E_final = E_initial
+                C_final = C_initial
+                G_final = G_initial
                 
-                # Create yearwise allocation data
-                years = list(range(int(doj_date.year), int(dor_date.year) + 1))
-                allocation_data = []
+            elif investment_option == "Auto_LC25":
+                # Lifecycle with max 25% equity: aggressive to conservative
+                if current_age < 35:
+                    E_initial = 25.0  # Max equity for young age
+                    C_initial = 50.0
+                    G_initial = 25.0
+                elif current_age < 50:
+                    E_initial = 20.0  # Reduce equity as age increases
+                    C_initial = 55.0
+                    G_initial = 25.0
+                else:
+                    E_initial = 15.0  # Conservative for older age
+                    C_initial = 60.0
+                    G_initial = 25.0
                 
-                for year in years:
-                    # Linear interpolation between initial and final allocations
-                    progress = (year - doj_date.year) / years_of_service if years_of_service > 0 else 0
-                    progress = min(1.0, max(0.0, progress))  # Clamp between 0 and 1
-                    
-                    E_year = E_initial + (E_final - E_initial) * progress
-                    C_year = C_initial + (C_final - C_initial) * progress
-                    G_year = G_initial + (G_final - G_initial) * progress
-                    
-                    allocation_data.append({
-                        'Year': year,
-                        'Equity (%)': round(E_year, 1),
-                        'Corporate (%)': round(C_year, 1),
-                        'Government (%)': round(G_year, 1),
-                        'Total (%)': round(E_year + C_year + G_year, 1)
-                    })
+                # Final allocation (at retirement) - more conservative
+                E_final = 10.0
+                C_final = 65.0
+                G_final = 25.0
                 
-                # Display yearwise allocation table
-                if allocation_data:
-                    df_allocation = pd.DataFrame(allocation_data)
-                    st.dataframe(
-                        df_allocation,
-                        hide_index=True,
-                        use_container_width=True,
-                        column_config={
-                            "Year": st.column_config.NumberColumn("Year", format="%d"),
-                            "Equity (%)": st.column_config.NumberColumn("Equity (%)", format="%.1f%%"),
-                            "Corporate (%)": st.column_config.NumberColumn("Corporate (%)", format="%.1f%%"),
-                            "Government (%)": st.column_config.NumberColumn("Government (%)", format="%.1f%%"),
-                            "Total (%)": st.column_config.NumberColumn("Total (%)", format="%.1f%%")
-                        }
+            elif investment_option == "Auto_LC50":
+                # Lifecycle with max 50% equity: moderate to conservative (DEFAULT)
+                if current_age < 35:
+                    E_initial = 50.0  # Max equity for young age
+                    C_initial = 35.0
+                    G_initial = 15.0
+                elif current_age < 50:
+                    E_initial = 40.0  # Reduce equity as age increases
+                    C_initial = 40.0
+                    G_initial = 20.0
+                else:
+                    E_initial = 30.0  # Moderate for older age
+                    C_initial = 45.0
+                    G_initial = 25.0
+                
+                # Final allocation (at retirement) - more conservative
+                E_final = 20.0
+                C_final = 50.0
+                G_final = 30.0
+                
+            elif investment_option == "Auto_LC75":
+                # Lifecycle with max 75% equity: very aggressive to conservative
+                if current_age < 35:
+                    E_initial = 75.0  # Max equity for young age
+                    C_initial = 20.0
+                    G_initial = 5.0
+                elif current_age < 50:
+                    E_initial = 60.0  # Reduce equity as age increases
+                    C_initial = 30.0
+                    G_initial = 10.0
+                else:
+                    E_initial = 45.0  # Moderate for older age
+                    C_initial = 40.0
+                    G_initial = 15.0
+                
+                # Final allocation (at retirement) - more conservative
+                E_final = 30.0
+                C_final = 45.0
+                G_final = 25.0
+                
+            elif investment_option == "Active":
+                # Manual allocation with age-based adjustments
+                if current_age < 35:
+                    E_initial = 60.0  # Aggressive for young age
+                    C_initial = 30.0
+                    G_initial = 10.0
+                elif current_age < 50:
+                    E_initial = 45.0  # Moderate for middle age
+                    C_initial = 40.0
+                    G_initial = 15.0
+                else:
+                    E_initial = 30.0  # Conservative for older age
+                    C_initial = 45.0
+                    G_initial = 25.0
+                
+                # Final allocation (at retirement) - more conservative
+                E_final = 20.0
+                C_final = 50.0
+                G_final = 30.0
+            
+            else:
+                # Default to Auto_LC50 if no valid option
+                E_initial = 40.0
+                C_initial = 40.0
+                G_initial = 20.0
+                E_final = 20.0
+                C_final = 50.0
+                G_final = 30.0
+            
+            # Display Initial Allocation
+            st.markdown("**Initial Allocation (Current Age: {:.1f} years)**".format(current_age))
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Equity", f"{E_initial:.1f}%")
+            with col2:
+                st.metric("Corporate", f"{C_initial:.1f}%")
+            with col3:
+                st.metric("Government", f"{G_initial:.1f}%")
+            with col4:
+                st.metric("Total", f"{E_initial + C_initial + G_initial:.1f}%")
+            
+            # Display Final Allocation
+            st.markdown("**Final Allocation (At Retirement)**")
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Equity", f"{E_final:.1f}%")
+            with col2:
+                st.metric("Corporate", f"{C_final:.1f}%")
+            with col3:
+                st.metric("Government", f"{G_final:.1f}%")
+            with col4:
+                st.metric("Total", f"{E_final + C_final + G_final:.1f}%")
+            
+            # Yearwise Allocation Table and Plot
+            st.markdown("---")
+            st.markdown("**📈 Yearwise Allocation Progression**")
+            
+            # Create yearwise allocation data
+            years = list(range(int(doj_date.year), int(dor_date.year) + 1))
+            allocation_data = []
+            
+            for year in years:
+                # Linear interpolation between initial and final allocations
+                progress = (year - doj_date.year) / years_of_service if years_of_service > 0 else 0
+                progress = min(1.0, max(0.0, progress))  # Clamp between 0 and 1
+                
+                E_year = E_initial + (E_final - E_initial) * progress
+                C_year = C_initial + (C_final - C_initial) * progress
+                G_year = G_initial + (G_final - G_initial) * progress
+                
+                allocation_data.append({
+                    'Year': year,
+                    'Equity (%)': round(E_year, 1),
+                    'Corporate (%)': round(C_year, 1),
+                    'Government (%)': round(G_year, 1),
+                    'Total (%)': round(E_year + C_year + G_year, 1)
+                })
+            
+            # Display yearwise allocation table
+            if allocation_data:
+                df_allocation = pd.DataFrame(allocation_data)
+                st.dataframe(
+                    df_allocation,
+                    hide_index=True,
+                    use_container_width=True,
+                    column_config={
+                        "Year": st.column_config.NumberColumn("Year", format="%d"),
+                        "Equity (%)": st.column_config.NumberColumn("Equity (%)", format="%.1f%%"),
+                        "Corporate (%)": st.column_config.NumberColumn("Corporate (%)", format="%.1f%%"),
+                        "Government (%)": st.column_config.NumberColumn("Government (%)", format="%.1f%%"),
+                        "Total (%)": st.column_config.NumberColumn("Total (%)", format="%.1f%%")
+                    }
+                )
+                
+                # Create allocation progression plot
+                fig_allocation = go.Figure()
+                
+                # Add traces for each asset class
+                fig_allocation.add_trace(go.Scatter(
+                    x=[row['Year'] for row in allocation_data],
+                    y=[row['Equity (%)'] for row in allocation_data],
+                    mode='lines+markers',
+                    name='Equity',
+                    line=dict(color='#ff9800', width=3),
+                    marker=dict(size=6)
+                ))
+                
+                fig_allocation.add_trace(go.Scatter(
+                    x=[row['Year'] for row in allocation_data],
+                    y=[row['Corporate (%)'] for row in allocation_data],
+                    mode='lines+markers',
+                    name='Corporate',
+                    line=dict(color='#2196f3', width=3),
+                    marker=dict(size=6)
+                ))
+                
+                fig_allocation.add_trace(go.Scatter(
+                    x=[row['Year'] for row in allocation_data],
+                    y=[row['Government (%)'] for row in allocation_data],
+                    mode='lines+markers',
+                    name='Government',
+                    line=dict(color='#4caf50', width=3),
+                    marker=dict(size=6)
+                ))
+                
+                # Update layout
+                fig_allocation.update_layout(
+                    title="Corpus Allocation Progression Over Years",
+                    xaxis_title="Year",
+                    yaxis_title="Corpus Allocation Percentage (%)",
+                    height=400,
+                    showlegend=True,
+                    template='plotly_white',
+                    legend=dict(
+                        orientation="h",
+                        yanchor="bottom",
+                        y=1.02,
+                        xanchor="center",
+                        x=0.5
+                    ),
+                    yaxis=dict(
+                        range=[0, 100],
+                        tickformat=".0f"
                     )
+                )
+                
+                st.plotly_chart(fig_allocation, use_container_width=True)
                     
-                    # Create allocation progression plot
-                    fig_allocation = go.Figure()
-                    
-                    # Add traces for each asset class
-                    fig_allocation.add_trace(go.Scatter(
-                        x=[row['Year'] for row in allocation_data],
-                        y=[row['Equity (%)'] for row in allocation_data],
-                        mode='lines+markers',
-                        name='Equity',
-                        line=dict(color='#ff9800', width=3),
-                        marker=dict(size=6)
-                    ))
-                    
-                    fig_allocation.add_trace(go.Scatter(
-                        x=[row['Year'] for row in allocation_data],
-                        y=[row['Corporate (%)'] for row in allocation_data],
-                        mode='lines+markers',
-                        name='Corporate',
-                        line=dict(color='#2196f3', width=3),
-                        marker=dict(size=6)
-                    ))
-                    
-                    fig_allocation.add_trace(go.Scatter(
-                        x=[row['Year'] for row in allocation_data],
-                        y=[row['Government (%)'] for row in allocation_data],
-                        mode='lines+markers',
-                        name='Government',
-                        line=dict(color='#4caf50', width=3),
-                        marker=dict(size=6)
-                    ))
-                    
-                    # Update layout
-                    fig_allocation.update_layout(
-                        title="Asset Allocation Progression Over Years",
-                        xaxis_title="Year",
-                        yaxis_title="Allocation Percentage (%)",
-                        height=400,
-                            showlegend=True,
-                            template='plotly_white',
-                            legend=dict(
-                                orientation="h",
-                                yanchor="bottom",
-                                y=1.02,
-                                xanchor="center",
-                                x=0.5
-                            ),
-                            yaxis=dict(
-                                range=[0, 100],
-                                tickformat=".0f"
-                            )
-                        )
-                        
-                        st.plotly_chart(fig_allocation, use_container_width=True)
-                        
-            except Exception as e:
-                st.warning(f"⚠️ Could not calculate yearwise allocation: {str(e)}")
+        except Exception as e:
+            st.warning(f"⚠️ Could not calculate corpus allocation: {str(e)}")
+            st.info("💡 Please ensure Date of Joining and Date of Retirement are set")
     else:
-        st.info("💡 Set allocation percentages in Financial Parameters tab to see details here")
+        st.info("💡 Please set Date of Joining, Date of Retirement, and Investment Strategy to see corpus allocation details")
     
 with tab5:
     st.markdown("### 💰 Retirement Options")
