@@ -1,0 +1,209 @@
+/* NPS vs UPS Pension Calculator - Main Stylesheet */
+
+/* Force dark theme compatibility */
+.stApp {
+    background-color: #0e1117 !important;
+}
+
+/* Main header with gradient */
+.main-header {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    padding: 2rem;
+    border-radius: 10px;
+    color: white;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+/* Metric cards with gradient */
+.metric-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 1.5rem;
+    border-radius: 15px;
+    color: white;
+    text-align: center;
+    margin: 1rem 0;
+}
+
+/* Section headers with dark theme compatibility */
+.section-header {
+    background: #262730;
+    padding: 1rem;
+    border-radius: 10px;
+    border-left: 5px solid #667eea;
+    margin: 2rem 0 1rem 0;
+    color: #fafafa;
+}
+
+/* Info boxes with dark theme compatibility */
+.info-box {
+    background: #1e1e2e;
+    padding: 1rem;
+    border-radius: 10px;
+    border-left: 5px solid #2196f3;
+    margin: 1rem 0;
+    color: #fafafa;
+}
+
+/* Warning boxes with dark theme compatibility */
+.warning-box {
+    background: #2d1b1b;
+    padding: 1rem;
+    border-radius: 10px;
+    border-left: 5px solid #ff9800;
+    margin: 1rem 0;
+    color: #fafafa;
+}
+
+/* Success boxes with dark theme compatibility */
+.success-box {
+    background: #1b2d1b;
+    padding: 1rem;
+    border-radius: 10px;
+    border-left: 5px solid #4caf50;
+    margin: 1rem 0;
+    color: #fafafa;
+}
+
+/* Comparison cards with dark theme compatibility */
+.comparison-card {
+    background: #262730;
+    padding: 1.5rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    margin: 1rem 0;
+    border: 2px solid #444;
+    color: #fafafa;
+}
+
+.ups-card {
+    border-color: #2196f3;
+}
+
+.nps-card {
+    border-color: #4caf50;
+}
+
+/* Tab styling with dark theme compatibility */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 2rem;
+    padding: 0 1rem;
+}
+
+.stTabs [data-baseweb="tab"] {
+    height: 4rem;
+    white-space: pre-wrap;
+    background-color: #262730;
+    border-radius: 4px 4px 0px 0px;
+    gap: 1rem;
+    padding: 10px 20px;
+    margin: 0 0.5rem;
+    color: #fafafa !important;
+    font-weight: 500;
+    border: 1px solid #444;
+}
+
+.stTabs [aria-selected="true"] {
+    background-color: #667eea;
+    color: white !important;
+    border-color: #667eea;
+}
+
+.stTabs [aria-selected="false"] {
+    background-color: #262730;
+    color: #fafafa !important;
+    border-color: #444;
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+    background-color: #3a3a4a;
+    border-color: #667eea;
+}
+
+/* Force text visibility in dark theme */
+.stMarkdown, .stText, .stSelectbox, .stNumberInput, .stCheckbox, .stRadio {
+    color: #fafafa !important;
+}
+
+/* Ensure form labels are visible */
+.stSelectbox > label, .stNumberInput > label, .stCheckbox > label, .stRadio > label {
+    color: #fafafa !important;
+    font-weight: 500;
+}
+
+/* Ensure help text is visible */
+.stSelectbox .help, .stNumberInput .help, .stCheckbox .help, .stRadio .help {
+    color: #cccccc !important;
+}
+
+/* Force sidebar visibility */
+.css-1d391kg {
+    background-color: #262730 !important;
+}
+
+/* Ensure all text elements are visible */
+p, h1, h2, h3, h4, h5, h6, span, div {
+    color: #fafafa !important;
+}
+
+/* Exception for specific elements that should keep their colors */
+.main-header *, .metric-card * {
+    color: inherit !important;
+}
+
+/* Additional dark theme fixes for Streamlit components */
+.stButton > button {
+    color: #fafafa !important;
+    background-color: #262730 !important;
+    border-color: #444 !important;
+}
+
+.stButton > button:hover {
+    background-color: #3a3a4a !important;
+}
+
+/* Fix for dataframes and tables */
+.stDataFrame {
+    background-color: #262730 !important;
+    color: #fafafa !important;
+}
+
+/* Fix for expander components */
+.streamlit-expanderHeader {
+    background-color: #262730 !important;
+    color: #fafafa !important;
+    border-color: #444 !important;
+}
+
+/* Fix for metric components */
+.stMetric {
+    background-color: #262730 !important;
+    color: #fafafa !important;
+}
+
+/* Fix for sidebar text */
+.css-1d391kg .css-1v0mbdj {
+    color: #fafafa !important;
+}
+
+/* Force all text to be visible */
+* {
+    color: #fafafa !important;
+}
+
+/* But preserve specific colors for important elements */
+.main-header, .main-header *, .metric-card, .metric-card * {
+    color: inherit !important;
+}
+
+/* Ensure links are visible */
+a {
+    color: #4fc3f7 !important;
+}
+
+/* Ensure code blocks are visible */
+code {
+    background-color: #1e1e2e !important;
+    color: #fafafa !important;
+    border: 1px solid #444 !important;
+}

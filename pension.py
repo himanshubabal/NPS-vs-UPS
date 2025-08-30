@@ -7,6 +7,60 @@ from dateutil.relativedelta import relativedelta
 import pprint
 from pyxirr import xirr
 
+def get_inflation_matrix(initial_inflation_rate: float = 7.0, 
+                        final_inflation_rate: float = 4.0, 
+                        taper_period_yrs: int = 40, 
+                        joining_year: int = 2024) -> Dict[float, float]:
+    """
+    Get inflation matrix for calculations.
+    
+    This function returns inflation rates by year, similar to the DA matrix.
+    For simplicity, we'll use the same logic as get_projected_DA.
+    
+    Args:
+        initial_inflation_rate (float): Starting inflation rate
+        final_inflation_rate (float): Ending inflation rate
+        taper_period_yrs (int): Years over which rates taper
+        joining_year (int): Year to start calculations
+        
+    Returns:
+        Dict[float, float]: Inflation rates by year
+    """
+    # Start with initial inflation rate
+    start_inflation = initial_inflation_rate
+    projected_inflation = {}
+    projected_inflation[joining_year] = start_inflation
+    
+    # Project inflation for each half-year period
+    current_year = joining_year
+    
+    # Calculate total periods to project
+    max_periods = int(taper_period_yrs * 2)  # Half-year periods
+    
+    for period in range(1, max_periods + 1):
+        # Calculate next half-year
+        next_year = current_year + 0.5
+        
+        # Calculate current inflation rate based on tapering
+        years_elapsed = (next_year - joining_year)
+        if years_elapsed <= taper_period_yrs:
+            # Linear tapering: rate decreases from initial to final
+            current_inflation_rate = initial_inflation_rate - (
+                (initial_inflation_rate - final_inflation_rate) * 
+                (years_elapsed / taper_period_yrs)
+            )
+        else:
+            # After taper period, use final rate
+            current_inflation_rate = final_inflation_rate
+        
+        # Store inflation rate for this half-year
+        projected_inflation[next_year] = round(current_inflation_rate, 1)
+        
+        # Update for next iteration
+        current_year = next_year
+    
+    return projected_inflation
+
 # Average of last 12 months salary
 def get_full_pension_amt_UPS(monthly_salary_detailed:dict):
     # Step 1: Flatten and filter non-zero

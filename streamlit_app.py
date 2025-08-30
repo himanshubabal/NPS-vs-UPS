@@ -2,14 +2,14 @@
 NPS vs UPS Pension Calculator - Streamlit Application
 
 A comprehensive pension scheme comparison tool for Indian government employees
-to evaluate NPS (National Pension System) vs UPS (Universal Pension Scheme).
+to evaluate NPS (National Pension System) vs UPS (Unified Pension Scheme).
 
 Author: Pension Calculator Team
 Version: 2.0 - Redesigned Interface
 """
 
 from all_data import get_all_data
-from helper_functions import *
+from helpers.helper_functions import *
 from default_constants import *
 from pay_commissions import get_level_year_from_basic_pay, get_basic_pay
 from rates import get_DA_matrix
@@ -32,95 +32,21 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://github.com/your-repo/nps-vs-ups',
         'Report a bug': "https://github.com/your-repo/nps-vs-ups/issues",
-        'About': "## NPS vs UPS Pension Calculator\n\nCompare your retirement benefits between National Pension System and Universal Pension Scheme."
+        'About': "## NPS vs UPS Pension Calculator\n\nCompare your retirement benefits between National Pension System (NPS) and Unified Pension Scheme (UPS)."
     }
 )
 
-# Custom CSS for better styling
-st.markdown("""
-<style>
-    .main-header {
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        padding: 2rem;
-        border-radius: 10px;
-        color: white;
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-    .metric-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 1.5rem;
-        border-radius: 15px;
-        color: white;
-        text-align: center;
-        margin: 1rem 0;
-    }
-    .section-header {
-        background: #f8f9fa;
-        padding: 1rem;
-        border-radius: 10px;
-        border-left: 5px solid #667eea;
-        margin: 2rem 0 1rem 0;
-    }
-    .info-box {
-        background: #e3f2fd;
-        padding: 1rem;
-        border-radius: 10px;
-        border-left: 5px solid #2196f3;
-        margin: 1rem 0;
-    }
-    .warning-box {
-        background: #fff3e0;
-        padding: 1rem;
-        border-radius: 10px;
-        border-left: 5px solid #ff9800;
-        margin: 1rem 0;
-    }
-    .success-box {
-        background: #e8f5e8;
-        padding: 1rem;
-        border-radius: 10px;
-        border-left: 5px solid #4caf50;
-        margin: 1rem 0;
-    }
-    .comparison-card {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 15px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        margin: 1rem 0;
-        border: 2px solid #e0e0e0;
-    }
-    .ups-card {
-        border-color: #2196f3;
-    }
-    .nps-card {
-        border-color: #4caf50;
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 2rem;
-    }
-    .stTabs [data-baseweb="tab"] {
-        height: 4rem;
-        white-space: pre-wrap;
-        background-color: #f0f2f6;
-        border-radius: 4px 4px 0px 0px;
-        gap: 1rem;
-        padding-top: 10px;
-        padding-bottom: 10px;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #667eea;
-        color: white;
-    }
-</style>
-""", unsafe_allow_html=True)
+# Load external CSS file
+with open('styles/main.css', 'r') as f:
+    css_content = f.read()
+
+st.markdown(f'<style>{css_content}</style>', unsafe_allow_html=True)
 
 # Main Header
 st.markdown("""
 <div class="main-header">
     <h1>💰 NPS vs UPS Pension Calculator</h1>
-    <p style="font-size: 1.2rem; margin: 0;">Compare your retirement benefits between National Pension System and Universal Pension Scheme</p>
+    <p style="font-size: 1.2rem; margin: 0;">Compare your retirement benefits between <strong>National Pension System (NPS)</strong> and <strong>Unified Pension Scheme (UPS)</strong></p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -416,12 +342,46 @@ with tab2:
         # Set tapering rates
         initial_inflation_rate = user_inflation_taper_initial
         final_inflation_rate = user_inflation_taper_final
-        E_initial = user_E_taper_initial
-        E_final = user_E_taper_final
-        C_initial = user_C_taper_initial
-        C_final = user_C_taper_final
-        G_initial = user_G_taper_initial
-        G_final = user_G_taper_final
+        
+        # Validate and normalize investment allocation percentages
+        total_initial = user_E_taper_initial + user_C_taper_initial + user_G_taper_initial
+        total_final = user_E_taper_final + user_C_taper_final + user_G_taper_final
+        
+        if abs(total_initial - 100.0) > 0.01:
+            st.warning(f"⚠️ Initial allocation percentages sum to {total_initial}%. Normalizing to 100%.")
+            E_initial = (user_E_taper_initial / total_initial) * 100.0
+            C_initial = (user_C_taper_initial / total_initial) * 100.0
+            G_initial = (user_G_taper_initial / total_initial) * 100.0
+        else:
+            E_initial = user_E_taper_initial
+            C_initial = user_C_taper_initial
+            G_initial = user_G_taper_initial
+            
+        if abs(total_final - 100.0) > 0.01:
+            st.warning(f"⚠️ Final allocation percentages sum to {total_final}%. Normalizing to 100%.")
+            E_final = (user_E_taper_final / total_final) * 100.0
+            C_final = (user_C_taper_final / total_final) * 100.0
+            G_final = (user_G_taper_final / total_final) * 100.0
+        else:
+            E_final = user_E_taper_final
+            C_final = user_C_taper_final
+            G_final = user_G_taper_final
+        
+        # Display normalized allocation percentages
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("**📊 Initial Allocation (Normalized)**")
+            st.metric("Equity", f"{E_initial:.1f}%")
+            st.metric("Corporate", f"{C_initial:.1f}%")
+            st.metric("Government", f"{G_initial:.1f}%")
+            st.metric("Total", f"{E_initial + C_initial + G_initial:.1f}%")
+        
+        with col2:
+            st.markdown("**📊 Final Allocation (Normalized)**")
+            st.metric("Equity", f"{E_final:.1f}%")
+            st.metric("Corporate", f"{C_final:.1f}%")
+            st.metric("Government", f"{G_final:.1f}%")
+            st.metric("Total", f"{E_final + C_final + G_final:.1f}%")
 
 with tab3:
     st.markdown("### 🏛️ Pay Commission Settings")
@@ -552,8 +512,8 @@ if calculate_button:
                 'take_earlier_corpus_into_account': considering_existing_corpus,
                 'earlier_corpus': earlier_corpus,
                 'earlier_corpus_end_date': UPS_IMPLEMENT_DATE,
-                'govt_contrib_percent': None,
-                'employee_contrib_percent': None,
+                'govt_contrib_percent': 14.0,  # Government contribution percentage
+                'employee_contrib_percent': 10.0,  # Employee contribution percentage
                 'starting_level': starting_level,
                 'starting_year_row_in_level': starting_year,
                 'is_ias': is_ias,
@@ -563,8 +523,8 @@ if calculate_button:
                 'fitment_factors': fit_list if 'fit_list' in locals() else DEFAULT_FITMENT_FACTORS,
                 'initial_inflation_rate': initial_inflation_rate,
                 'final_inflation_rate': final_inflation_rate,
-                'initial_interest_rate': None,
-                'final_interest_rate': None,
+                'initial_interest_rate': 12.0,  # Initial investment return rate
+                'final_interest_rate': 6.0,  # Final investment return rate
                 'taper_period_yrs': DEFAULT_TAPER_PERIOD,
                 'pension_duration': DEFAULT_PENSION_DURATION,
                 'E_initial': E_initial,
@@ -638,7 +598,7 @@ if calculate_button:
     with col_ups:
         st.markdown("""
         <div class="comparison-card ups-card">
-            <h3>🏛️ UPS (Universal Pension Scheme)</h3>
+            <h3>🏛️ UPS (Unified Pension Scheme)</h3>
         </div>
         """, unsafe_allow_html=True)
         
@@ -662,7 +622,7 @@ if calculate_button:
         """, unsafe_allow_html=True)
         
         nps_metrics = {
-            "Final Corpus": f"₹{all_data_ups['final_corpus_amount']:,}",
+            "Final Corpus": f"₹{all_data_nps['final_corpus_amount']:,}",
             "Monthly Pension": f"₹{all_data_nps['adjusted_pension']:,}",
             "Withdrawal Amount": f"₹{all_data_nps['withdraw_corpus']:,}",
             "Lumpsum": "₹0 (No lumpsum)",
@@ -904,11 +864,23 @@ if calculate_button:
             row=1, col=1
         )
         
-        # Level progression
+        # Level progression - handle special levels like '13A'
+        def convert_level_to_numeric(level_str):
+            """Convert level string to numeric value for plotting."""
+            try:
+                if level_str == '13A':
+                    return 13.5  # Place 13A between 13 and 14
+                else:
+                    return float(level_str)
+            except:
+                return 0.0
+        
+        level_numeric = df_career['Level'].apply(convert_level_to_numeric)
+        
         fig_career.add_trace(
             go.Scatter(
                 x=df_career.index,
-                y=df_career['Level'].astype(float),
+                y=level_numeric,
                 mode='lines+markers',
                 name='Pay Level',
                 line=dict(color='#9c27b0', width=3)
@@ -934,7 +906,7 @@ if calculate_button:
         <div class="info-box">
             <h4>💡 About UPS</h4>
             <ul>
-                <li>Universal Pension Scheme for government employees</li>
+                <li>Unified Pension Scheme for government employees</li>
                 <li>Provides lumpsum at retirement</li>
                 <li>Monthly pension based on service duration</li>
                 <li>Government contribution of 14%</li>

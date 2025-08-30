@@ -1,78 +1,143 @@
 # NPS vs UPS Pension Calculator
 
-A comprehensive pension scheme comparison tool for Indian government employees to evaluate **NPS (National Pension System)** vs **UPS (Universal Pension Scheme)** based on career parameters and financial assumptions.
+A comprehensive pension scheme comparison tool for Indian government employees to evaluate **National Pension System (NPS)** vs **Unified Pension Scheme (UPS)**.
 
-## 🎯 Purpose
+## 🎯 Overview
 
-This application helps government employees make informed decisions about their pension scheme choice by providing:
-- Detailed career progression simulation
-- Financial modeling with customizable parameters
-- Side-by-side comparison of NPS vs UPS benefits
-- Data-driven recommendations with weighted scoring
-- Interactive visualizations and charts
+This application helps government employees make informed decisions about their pension schemes by providing detailed calculations, comparisons, and visualizations of retirement benefits under both NPS and UPS systems.
+
+## ✨ Key Features
+
+### 🔢 **Comprehensive Calculations**
+- **Corpus Growth**: Year-by-year investment growth projections
+- **Monthly Pension**: Post-retirement monthly income calculations
+- **Financial Metrics**: NPV (Net Present Value) and XIRR (Extended Internal Rate of Return)
+- **Withdrawal Options**: Lumpsum and monthly pension combinations
+- **Inflation Adjustments**: Real-time inflation impact on future benefits
+
+### 🎨 **Advanced Visualizations**
+- **Interactive Charts**: Plotly-based corpus growth and comparison charts
+- **Comparison Tables**: Side-by-side NPS vs UPS benefit analysis
+- **Metric Cards**: Key performance indicators with visual appeal
+- **Responsive Design**: Optimized for desktop and mobile devices
+
+### ⚙️ **Flexible Configuration**
+- **Career Progression**: Customizable promotion timelines and pay levels
+- **Investment Strategies**: Multiple allocation options (Equity, Corporate Bonds, Government Bonds)
+- **Financial Parameters**: Adjustable inflation rates, interest rates, and contribution percentages
+- **Service Options**: Support for IAS, IPS, IFS, and other central services
 
 ## 🏗️ Architecture
 
+### **Core Modules**
 ```
-streamlit_app.py (Main UI)
-├── all_data.py (Data aggregation & orchestration)
-├── helper_functions.py (Utility functions & helpers)
-├── default_constants.py (Configuration & defaults)
-├── pay_commissions.py (Career progression & pay matrix)
-├── rates.py (DA & interest rate calculations)
-├── salary.py (Salary computation & monthly breakdown)
-├── contribution.py (Contribution & corpus calculation)
-├── pension.py (Retirement benefits & financial metrics)
-└── invest_options.py (Investment allocation strategies)
+nps_vs_ups/
+├── streamlit_app.py          # Main Streamlit application (core logic only)
+├── app.py                    # Alternative simplified app
+├── all_data.py              # Central calculation orchestrator
+├── pay_commissions.py       # Career progression and pay matrix
+├── rates.py                 # DA, inflation, and interest rate management
+├── salary.py                # Salary calculations and breakdowns
+├── contribution.py          # Employee and government contributions
+├── invest_options.py        # Investment allocation strategies
+├── pension.py               # Retirement benefit calculations
+├── default_constants.py     # Configuration and constants
+├── requirements.txt          # Python dependencies
+├── README.md                # Project documentation
+├── PROJECT_STRUCTURE.md     # Detailed structure overview
+├── .gitignore               # Git ignore rules
+│
+├── 📁 helpers/              # Helper functions and utilities
+│   ├── helper_functions.py  # Legacy helper functions
+│   ├── utils/               # Utility modules (date, formatting, validation)
+│   └── core/                # Core calculation modules (future)
+│
+├── 📁 styles/               # CSS and styling
+│   └── main.css             # Main stylesheet (dark theme)
+│
+└── 📁 assets/               # Static assets
+    ├── data/                # CSV data files
+    │   ├── 7th_CPC.csv      # Pay matrix data
+    │   ├── 6th_CPC_DA.csv   # Historical DA data
+    │   └── 7th_CPC_DA.csv   # Current DA data
+    └── images/               # Image files
 ```
 
-## 🚀 Quick Start
+### **Data Flow**
+1. **User Input** → Streamlit UI collects parameters
+2. **Validation** → Input validation and default value assignment
+3. **Career Progression** → Pay level and promotion calculations
+4. **Salary Matrix** → Basic pay + DA calculations
+5. **Contributions** → Monthly contribution and corpus growth
+6. **Investment Returns** → ECG allocation and return calculations
+7. **Retirement Benefits** → Pension, lumpsum, and withdrawal amounts
+8. **Financial Metrics** → NPV, XIRR, and future projections
+9. **Results Display** → Interactive charts and comparison tables
 
-### Prerequisites
+## 🚀 Installation & Setup
+
+### **Prerequisites**
 - Python 3.8+
-- Virtual environment (recommended)
+- pip package manager
 
-### Installation
+### **Installation Steps**
 ```bash
-# Clone or download the project
-cd nps_vs_ups
+# Clone the repository
+git clone https://github.com/your-username/nps-vs-ups.git
+cd nps-vs-ups
 
 # Create virtual environment
-python3 -m venv .venv
-
-# Activate virtual environment
+python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 
 # Run the application
-streamlit run streamlit_app.py --server.port 8501
+streamlit run streamlit_app.py
 ```
 
-### Access
-Open your browser and navigate to: **http://localhost:8501**
+### **Dependencies**
+```
+streamlit>=1.28.0          # Web application framework
+plotly>=5.17.0             # Interactive visualizations
+pandas>=2.0.0              # Data manipulation
+babel>=2.12.0              # Number and currency formatting
+altair>=5.0.0              # Statistical visualizations
+```
 
-## 📋 User Input Options
+## 📊 Configuration Options
 
-### 1. Personal & Career Details
+### **Personal Information**
+- **Date of Birth**: Affects retirement age and career duration
+- **Date of Joining**: Determines service length and promotion eligibility
+- **Early Retirement**: Option to specify custom retirement date
+- **Service Type**: IAS, IPS, IFS, or other central services
 
-#### Date of Birth (DOB)
-- **Range**: 1965-01-01 to 2005-12-31
-- **Default**: 1995-01-01
-- **Impact**: Determines retirement age (60 years) and service duration
+### **Career Configuration**
+- **Starting Level**: Initial pay level (7th CPC system)
+- **Starting Year**: Year within the starting level
+- **Promotion Periods**: Customizable years between promotions
+- **Fitment Factors**: Salary increase percentages at each CPC
 
-#### Date of Joining (DOJ)
-- **Range**: 2006-01-01 to 2030-12-31
-- **Default**: 2024-12-09
-- **Impact**: Starting point for career progression and calculations
+### **Financial Parameters**
+- **Investment Strategy**: 
+  - Standard/Benchmark (15% equity)
+  - Auto_LC25 (25% max equity)
+  - Auto_LC50 (50% max equity) - **Default**
+  - Auto_LC75 (75% max equity)
+  - Active (manual allocation)
+- **Inflation Rates**: Initial and final rates with tapering
+- **Interest Rates**: Equity, Corporate, and Government bond returns
+- **Contribution Percentages**: Employee (10%) and Government (14%)
 
-#### Early Retirement
-- **Toggle**: Checkbox for early retirement consideration
-- **When Enabled**: Allows custom retirement date input
-- **Range**: 2025-01-01 to calculated retirement age
-- **Impact**: Affects service duration and pension calculations
+### **Retirement Options**
+- **Withdrawal Percentage**: Corpus amount to withdraw (1-60%)
+- **Annuity Rate**: NPS corpus to pension conversion rate
+- **Pension Duration**: Years to project post-retirement benefits
+- **Existing Corpus**: Include previous NPS investments
 
+<<<<<<< Updated upstream
 #### Service Type
 - **Options**: 
   - `IFS (AIS)` - Indian Forest Service (All India Service)
@@ -85,281 +150,112 @@ Open your browser and navigate to: **http://localhost:8501**
   - AIS: Starts from Pay Level 10 minimum
   - Other: Full pay level range available
 
-### 2. Existing Corpus & Current Status
+## 🎮 Usage Guide
 
-#### Consider Existing NPS Corpus
-- **Toggle**: Checkbox for existing NPS Tier 1 corpus
-- **Auto-Enable**: Automatically checked if DOJ < 2024-01-01
-- **Impact**: 
-  - Shifts calculation start date to UPS implementation date
-  - Includes existing corpus in calculations
-  - Requires current basic pay input
+### **Basic Usage**
+1. **Open Application**: Launch `streamlit run streamlit_app.py`
+2. **Configure Inputs**: Set personal, career, and financial parameters
+3. **Calculate Results**: Click "Calculate Pension Comparison" button
+4. **Review Results**: Analyze metrics, charts, and comparisons
+5. **Make Decision**: Choose between NPS and UPS based on results
 
-#### Existing Corpus Amount
-- **Input**: Number input for current NPS corpus
-- **Step**: ₹1,000 increments
-- **Display**: Formatted compact currency (e.g., ₹1.00Cr)
-- **Impact**: Added to yearly contributions as initial value
+### **Advanced Configuration**
+1. **Custom Promotion Timeline**: Modify promotion duration array
+2. **Investment Allocation**: Adjust ECG percentages manually
+3. **Financial Scenarios**: Test different inflation and interest rate combinations
+4. **Early Retirement**: Analyze impact of retiring before standard age
 
-#### Current Basic Pay (7th CPC)
-- **Input**: Current basic pay according to 7th CPC
-- **Step**: ₹100 increments
-- **Validation**: Must match valid pay level/year combination
-- **Auto-Display**: Corresponding pay level and year index
-- **Impact**: Starting point for career progression
-
-### 3. Career Progression
-
-#### Starting Pay Level (New Recruits)
-- **Options**: Pay Levels 1-18 (with AIS restrictions)
-- **Default**: Level 10 for AIS services
-- **Auto-Calculate**: Basic pay based on level and starting year
-- **Impact**: Initial career position and progression path
-
-#### Promotion Schedule
-- **Dynamic Rows**: Based on available levels from starting position
-- **Input Fields**:
-  - **Next Promotion Level**: Select from available higher levels
-  - **Promotion Year**: Absolute year (e.g., 2028) or duration (e.g., 4 years)
-- **Auto-Validation**: Shows selected level and due year
-- **Default Schedule**: [4, 5, 4, 1, 4, 7, 5, 3] years if none specified
-- **Impact**: Career advancement timing and pay progression
-
-### 4. Financial Parameters
-
-#### Inflation & Interest Rate Mode
-- **Options**: 
-  - `Constant` - Fixed rates throughout career
-  - `Variable (tapering)` - Rates change over time
-
-#### Constant Mode
-- **Inflation Rate**: 0.0% to 20.0% (default: 7.0%)
-- **Equity Return**: 0.0% to 15.0% (default: 12.0%)
-- **Corporate Bond Return**: 0.0% to 10.0% (default: 8.0%)
-- **Government Bond Return**: 0.0% to 10.0% (default: 8.0%)
-
-#### Variable (Tapering) Mode
-- **Inflation**: Initial (0.0% to 20.0%) → Final (0.0% to 20.0%)
-  - Default: 7.0% → 4.0%
-- **Equity**: Initial (0.0% to 20.0%) → Final (0.0% to 20.0%)
-  - Default: 12.0% → 6.0%
-- **Corporate Bonds**: Initial (0.0% to 10.0%) → Final (0.0% to 10.0%)
-  - Default: 8.0% → 4.0%
-- **Government Bonds**: Initial (0.0% to 10.0%) → Final (0.0% to 10.0%)
-  - Default: 4.0% → 4.0%
-- **Taper Period**: 40 years (default)
-
-### 5. Pay Commission Settings
-
-#### Implementation Years
-- **Default Schedule**: [2026, 2036, 2046, 2056, 2066]
-- **Auto-Calculate**: 
-  - **DA at PC Year**: Last half-year DA before commission
-  - **Salary Increase %**: Derived from fitment factor and DA
-  - **Fitment Factor**: (1 + DA%) × (1 + Salary Increase %)
-- **User Override**: Custom fitment factors for each commission
-- **Impact**: Salary jumps and DA resets at commission years
-
-### 6. Investment & Retirement Options
-
-#### Investment Strategy
-- **Options**:
-  - `Standard/Benchmark`: 15% Equity, 35% Corporate Bonds, 50% Government Bonds
-  - `Auto_LC25`: Lifecycle 25% (aggressive to conservative)
-  - `Auto_LC50`: Lifecycle 50% (moderate to conservative) - **Default**
-  - `Auto_LC75`: Lifecycle 75% (very aggressive to conservative)
-  - `Active`: 75% Equity till 50, then tapering to 50%
-- **Glide Path**: Age-based asset allocation changes
-- **Impact**: Risk-return profile and corpus growth
-
-#### Annuity Rate (NPS)
-- **Range**: 1.0% to 10.0%
-- **Default**: Inflation at retirement + 1%
-- **Calculation**: Based on retirement year DA projection
-- **Impact**: Monthly pension amount from NPS corpus
-
-#### Corpus Withdrawal
-- **Range**: 1.0% to 60.0%
-- **Default**: 25%
-- **Impact**: 
-  - Amount withdrawn at retirement
-  - Remaining corpus for annuity/pension
-
-#### Maximum Gratuity
-- **Range**: ₹25,00,000 to ₹10,00,00,000
-- **Default**: ₹25,00,000 (current government cap)
-- **Impact**: Additional retirement benefit amount
-
-## 📊 Output Metrics
-
-### 1. Career Progression
-- **Level Progression**: Pay level changes over time
-- **Basic Pay Growth**: Annual increments and promotions
-- **Salary Matrix**: Basic + DA over career span
-- **Service Duration**: Years and months in service
-
-### 2. Financial Projections
-- **Yearly Corpus**: NPS corpus growth year by year
+### **Result Interpretation**
 - **Final Corpus**: Total accumulated amount at retirement
-- **Monthly Salary**: Detailed monthly breakdown
-- **Contribution History**: Employee + government contributions
+- **Monthly Pension**: Starting monthly pension amount
+- **XIRR**: Investment return rate over the career period
+- **NPV**: Present value of future benefits adjusted for inflation
+- **Withdrawal Amount**: Lumpsum available at retirement
 
-### 3. Retirement Benefits
-- **Monthly Pension**: Starting pension amount
-- **Lumpsum (UPS)**: One-time payment at retirement
-- **Total Withdrawal**: Corpus + lumpsum + gratuity
-- **Future Pension**: Pension growth over retirement years
+## 🔧 Customization
 
-### 4. Performance Metrics
-- **NPV**: Net Present Value (inflation-adjusted)
-- **XIRR**: Extended Internal Rate of Return
-- **10-year Pension Total**: Cumulative pension over first decade
+### **Adding New Services**
+1. Update `SERVICES` list in `default_constants.py`
+2. Modify promotion rules in `pay_commissions.py`
+3. Add service-specific logic in relevant modules
 
-### 5. Comparison & Recommendation
-- **Side-by-Side Charts**: Bar charts for key metrics
-- **Weighted Scoring**: 
-  - Monthly Pension: 35%
-  - 10-year Pension Total: 25%
-  - Total Withdrawal: 15%
-  - Final Corpus: 15%
-  - NPV: 5%
-  - XIRR: 5%
-- **Clear Recommendation**: Winner with top reasons
+### **Modifying Financial Parameters**
+1. Update rate constants in `default_constants.py`
+2. Adjust tapering logic in `rates.py`
+3. Modify investment allocation in `invest_options.py`
 
-## 🔧 Configuration Files
+### **Extending Calculations**
+1. Add new functions to appropriate modules
+2. Update `all_data.py` to orchestrate new calculations
+3. Integrate results into Streamlit UI
 
-### `default_constants.py`
-- Pay levels, service options, default rates
-- Pay commission years and fitment factors
-- Taper periods and pension duration
-- Investment option definitions
+## 📈 Performance & Scalability
 
-### `data/` Directory
-- **7th_CPC.csv**: Main pay matrix
-- **6th_CPC_DA.csv**: Historical DA data (2006-2015)
-- **7th_CPC_DA.csv**: Historical DA data (2016-2025)
-- **Generated CPCs**: Future pay matrices with fitment factors
+### **Optimization Features**
+- **Lazy Loading**: Data loaded only when needed
+- **Caching**: Streamlit session state for user inputs
+- **Efficient Calculations**: Vectorized operations where possible
+- **Memory Management**: Minimal data duplication
 
-## 📈 Key Algorithms
+### **Scalability Considerations**
+- **Modular Design**: Easy to add new calculation modules
+- **Configuration-Driven**: Constants file for easy parameter changes
+- **Extensible Architecture**: Support for additional pension schemes
 
-### Career Progression
+## 🐛 Troubleshooting
+
+### **Common Issues**
+1. **Import Errors**: Ensure all dependencies are installed
+2. **Data File Errors**: Check CSV files exist in `assets/data/` directory
+3. **Calculation Errors**: Verify input parameters are within valid ranges
+4. **UI Issues**: Clear browser cache and restart Streamlit
+5. **CSS Issues**: Verify `styles/main.css` file exists and is readable
+
+### **Debug Mode**
 ```python
-# Half-year simulation with mid-year increments and year-end promotions
-if year % 1 == 0.5:  # July 1st - annual increment
-    apply_annual_increment()
-if year % 1 != 0.5:  # January 1st - promotion + pay commission
-    if is_pay_commission_year(): apply_fitment_factor()
-    if is_promotion_year(): apply_promotion()
+# Enable debug logging
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
+# Run with debug info
+streamlit run streamlit_app.py --logger.level=debug
 ```
-
-### DA Calculation
-```python
-# Historical data + projected inflation with PC resets
-if year <= 2025.5: use_historical_da()
-else: 
-    current_da += inflation_rate / 2
-    if year == pay_commission_year: current_da = 0
-```
-
-### Investment Allocation
-```python
-# Age-based glide path (example: Auto_LC50)
-if age <= 35: E:50%, C:30%, G:20%
-elif age >= 55: E:10%, C:10%, G:80%
-else: linear_transition()
-```
-
-## 🎨 UI Features
-
-### Layout
-- **Wide Layout**: Optimized for dashboard view
-- **Expanded Sidebar**: Easy access to all options
-- **Responsive Columns**: Organized input sections
-- **Expandable Sections**: Optional parameters hidden by default
-
-### Visualizations
-- **Line Charts**: Career progression, corpus growth, pension projection
-- **Bar Charts**: Metric comparisons (Altair)
-- **Data Tables**: Formatted currency and compact displays
-- **Metrics**: Key performance indicators
-
-### User Experience
-- **Real-time Validation**: Input validation and error messages
-- **Auto-calculation**: Derived values and suggestions
-- **Session State**: Remembers user preferences
-- **Responsive Design**: Works on different screen sizes
-
-## 🚨 Error Handling
-
-### Validation Checks
-- Basic pay must match valid level/year combination
-- Early retirement requires custom date input
-- Existing corpus mode requires current basic pay
-- Promotion schedule validation
-
-### Graceful Failures
-- Safe session state access with `.get()` method
-- Default values when inputs are missing
-- Clear error messages and warnings
-- App continues with reasonable defaults
-
-## 🔍 Troubleshooting
-
-### Common Issues
-1. **Port Already in Use**: Change port with `--server.port 8502`
-2. **Missing Dependencies**: Ensure all packages from `requirements.txt` are installed
-3. **Data File Errors**: Check `data/` directory for required CSV files
-4. **Memory Issues**: Large career spans may require more RAM
-
-### Debug Mode
-```bash
-streamlit run streamlit_app.py --logger.level debug
-```
-
-## 📚 Technical Details
-
-### Dependencies
-- **Streamlit**: Web application framework
-- **Pandas**: Data manipulation and analysis
-- **Altair**: Statistical visualization
-- **Babel**: Internationalization and formatting
-- **pyxirr**: Extended Internal Rate of Return calculation
-
-### Performance
-- **Caching**: CSV loading and data processing
-- **Efficient Algorithms**: O(n) complexity for most operations
-- **Memory Management**: Streaming data processing for large careers
-
-### Extensibility
-- **Modular Design**: Easy to add new features
-- **Configuration Driven**: Constants and defaults easily modifiable
-- **Plugin Architecture**: New investment strategies can be added
 
 ## 🤝 Contributing
 
-### Code Structure
-- Follow existing naming conventions
-- Add comprehensive docstrings
-- Include type hints where possible
-- Test with various input combinations
+### **Development Setup**
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature-name`
+3. Make changes and test thoroughly
+4. Submit pull request with detailed description
 
-### Adding Features
-- New investment strategies in `invest_options.py`
-- Additional pay commission logic in `pay_commissions.py`
-- Extended financial metrics in `pension.py`
+### **Code Standards**
+- Follow PEP 8 style guidelines
+- Add comprehensive docstrings
+- Include type hints for functions
+- Write unit tests for new features
 
 ## 📄 License
 
-This project is provided as-is for educational and planning purposes. Please consult with financial advisors for actual retirement planning decisions.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **Government of India**: For pension scheme documentation
+- **7th CPC**: Pay commission data and structure
+- **Open Source Community**: For the tools and libraries used
 
 ## 📞 Support
 
-For issues or questions:
-1. Check the troubleshooting section
-2. Review error messages in the terminal
-3. Verify all data files are present
-4. Ensure Python version compatibility
+- **Issues**: Report bugs via GitHub Issues
+- **Discussions**: Join community discussions
+- **Documentation**: Check this README and inline code comments
+- **Contributors**: See GitHub Contributors page
 
 ---
 
 **Note**: This calculator provides estimates based on current government policies and assumptions. Actual benefits may vary based on policy changes, market conditions, and individual circumstances.
+
+**Version**: 2.0  
+**Last Updated**: December 2024  
+**Maintainer**: Pension Calculator Team

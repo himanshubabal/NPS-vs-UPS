@@ -123,15 +123,25 @@ def apply_investment_returns(corpus: float,
         - Corpus grows through contributions + returns
     """
     # Get investment allocation for current age
-    allocation = get_investment_allocation(investment_option, age)
+    E_percentage, C_percentage, G_percentage = get_investment_allocation(investment_option, age)
     
     # Calculate weighted average return
     weighted_return = 0.0
-    for asset_class, percentage in allocation.items():
-        if asset_class in interest_rate_tapering_dict:
-            # Get current year rate (simplified - in practice would use actual year)
-            current_rate = interest_rate_tapering_dict[asset_class]['initial']
-            weighted_return += (percentage / 100.0) * current_rate
+    
+    # Equity returns
+    if 'E' in interest_rate_tapering_dict:
+        current_rate = interest_rate_tapering_dict['E']['initial']
+        weighted_return += (E_percentage / 100.0) * current_rate
+    
+    # Corporate bond returns
+    if 'C' in interest_rate_tapering_dict:
+        current_rate = interest_rate_tapering_dict['C']['initial']
+        weighted_return += (C_percentage / 100.0) * current_rate
+    
+    # Government bond returns
+    if 'G' in interest_rate_tapering_dict:
+        current_rate = interest_rate_tapering_dict['G']['initial']
+        weighted_return += (G_percentage / 100.0) * current_rate
     
     # Convert annual return to monthly return
     monthly_return_rate = weighted_return / 12.0 / 100.0

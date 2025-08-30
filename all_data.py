@@ -28,8 +28,9 @@ from typing import Union, Dict, Any, Tuple
 
 from pension import *
 from pay_commissions import career_progression
-from salary import get_salary_matrix, get_monthly_salary
+from salary import get_salary_matrix, get_monthly_salary, get_salary_matrix_from_career
 from contribution import get_final_corpus
+from rates import get_DA_matrix, get_interest_rate_tapering_dict
 
 
 def get_all_data(scheme: str = 'UPS', 
@@ -43,8 +44,8 @@ def get_all_data(scheme: str = 'UPS',
                  take_earlier_corpus_into_account: bool = False, 
                  earlier_corpus: int = None, 
                  earlier_corpus_end_date: str = None, 
-                 govt_contrib_percent: float = None,  
-                 employee_contrib_percent: float = None, 
+                 govt_contrib_percent: float = 14.0,  
+                 employee_contrib_percent: float = 10.0, 
                  starting_level: Union[int, str] = 10, 
                  starting_year_row_in_level: int = 1, 
                  is_ias: bool = False, 
@@ -215,7 +216,13 @@ def main_function(**kwargs) -> Dict[str, Any]:
     # Step 0: Calculate DA Matrix (Dearness Allowance projections)
     # This combines historical DA data with projected inflation rates
     # and resets DA to 0 at each Pay Commission implementation year
-    da_matrix = auto_pass_arguments_to_function(get_DA_matrix, **kwargs)
+    da_matrix = get_DA_matrix(
+        initial_inflation_rate=kwargs.get('initial_inflation_rate', 7.0),
+        final_inflation_rate=kwargs.get('final_inflation_rate', 3.0),
+        taper_period_yrs=kwargs.get('taper_period_yrs', 40),
+        doj=kwargs.get('doj', '9/10/24'),
+        pay_commission_implement_years=kwargs.get('pay_commission_implement_years', [2026, 2036, 2046, 2056, 2066])
+    )
 
     # Step 1: Calculate Career Progression
     # Simulates the employee's career path including:
@@ -223,28 +230,77 @@ def main_function(**kwargs) -> Dict[str, Any]:
     # - Promotions (year-end)
     # - Pay Commission implementations
     # - Level and pay changes over time
-    career_progn = auto_pass_arguments_to_function(career_progression, **kwargs)
+    career_progn = career_progression(
+        starting_level=kwargs.get('starting_level', 10),
+        starting_year_row_in_level=kwargs.get('starting_year_row_in_level', 1),
+        promotion_duration_array=kwargs.get('promotion_duration_array', [4, 5, 4, 1, 4, 7, 5, 3]),
+        present_pay_matrix_csv=kwargs.get('present_pay_matrix_csv', '7th_CPC.csv'),
+        early_retirement=kwargs.get('early_retirement', False),
+        dob=kwargs.get('dob', '20/07/1999'),
+        doj=kwargs.get('doj', '9/10/24'),
+        dor=kwargs.get('dor', None),
+        is_ias=kwargs.get('is_ias', False),
+        da_matrix=da_matrix,
+        percent_inc_salary=kwargs.get('percent_inc_salary', 15),
+        pay_commission_implement_years=kwargs.get('pay_commission_implement_years', [2026, 2036, 2046, 2056, 2066]),
+        fitment_factors=kwargs.get('fitment_factors', [2, 2, 2, 2, 2])
+    )
     
     # Step 2: Calculate Salary Matrix
     # Combines career progression with DA matrix to compute:
     # - Basic pay at each career stage
     # - DA percentage at each half-year
     # - Total salary (Basic + DA) over career span
-    salary_matrix = auto_pass_arguments_to_function(get_salary_matrix, **kwargs)
+    salary_matrix = get_salary_matrix_from_career(career_progn, da_matrix)
+    
+    # Step 2.5: Calculate Monthly Salary Breakdown
+    # Convert half-yearly salary matrix to monthly breakdown for contribution calculations
+    # Since the current get_monthly_salary function expects different parameters,
+    # we'll create a simple structure manually
+    monthly_salary_detailed = {}
+    yearly_monthly = {}
+    
+    # Convert salary matrix to monthly structure
+    month_index = 1
+    for year, salary in salary_matrix.items():
+        year_int = int(year)
+        if year_int not in yearly_monthly:
+            yearly_monthly[year_int] = {}
+        
+        # Determine months for this half-year
+        if year % 1 == 0.0:  # January-June (first half)
+            months = range(1, 7)
+        else:  # July-December (second half)
+            months = range(7, 13)
+        
+        # Assign monthly salaries
+        monthly_salary = salary / 12.0
+        for month in months:
+            monthly_salary_detailed[month_index] = round(monthly_salary, 2)
+            yearly_monthly[year_int][month] = round(monthly_salary, 2)
+            month_index += 1
     
     # Store basic data for further calculations
     all_data['da_matrix'] = da_matrix
     all_data['career_progression'] = career_progn
     all_data['salary_matrix'] = salary_matrix
+    all_data['monthly_salary_detailed'] = monthly_salary_detailed
 
     # Step 3: Calculate Final Corpus
     # This is the core calculation that determines:
-    # - Monthly salary breakdown
     # - Employee and government contributions
     # - Investment returns based on age-based allocation
     # - Corpus growth over the entire career
-    final_corpus_amount, yearly_corpus, monthly_salary_detailed = auto_pass_arguments_to_function(
-        get_final_corpus, **kwargs
+    final_corpus_amount, yearly_corpus, _ = get_final_corpus(
+        monthly_salary_detailed=monthly_salary_detailed,
+        investment_option=kwargs.get('investment_option', 'Auto_LC50'),
+        interest_rate_tapering_dict=kwargs.get('interest_rate_tapering_dict', {}),
+        dob=kwargs.get('dob', '20/07/1999'),
+        doj=kwargs.get('doj', '9/10/24'),
+        employee_contrib_percent=kwargs.get('employee_contrib_percent', 10.0),
+        govt_contrib_percent=kwargs.get('govt_contrib_percent', 14.0),
+        existing_corpus=kwargs.get('existing_corpus', 0.0),
+        existing_corpus_end_date=kwargs.get('existing_corpus_end_date', None)
     )
     
     all_data['final_corpus_amount'] = final_corpus_amount
@@ -261,8 +317,19 @@ def main_function(**kwargs) -> Dict[str, Any]:
     # - Lumpsum payment (UPS only)
     # - Total withdrawal amount
     # - Adjusted pension based on withdrawal percentage
-    withdraw_corpus, lumpsum_for_ups, adjusted_pension = auto_pass_arguments_to_function(
-        get_final_amounts_all, **kwargs
+    withdraw_corpus, lumpsum_for_ups, adjusted_pension = get_final_amounts_all(
+        final_corpus_amount=final_corpus_amount,
+        monthly_salary_detailed=yearly_monthly,  # Use yearly_monthly for pension functions
+        dob=kwargs.get('dob', '20/07/1999'),
+        doj=kwargs.get('doj', '9/10/24'),
+        early_retirement=kwargs.get('early_retirement', False),
+        dor=kwargs.get('dor', None),
+        withdrawl_percentage=kwargs.get('withdrawl_percentage', 60.0),
+        scheme=kwargs.get('scheme', 'UPS'),
+        annuity_rate=kwargs.get('annuity_rate', None),
+        initial_inflation_rate=kwargs.get('initial_inflation_rate', 7.0),
+        final_inflation_rate=kwargs.get('final_inflation_rate', 3.0),
+        taper_period_yrs=kwargs.get('taper_period_yrs', 40)
     )
     
     all_data['withdraw_corpus'] = withdraw_corpus
@@ -281,13 +348,37 @@ def main_function(**kwargs) -> Dict[str, Any]:
     # - Future pension projections post-retirement
     
     # NPV calculation with inflation adjustment
-    inflation_factor, npv = auto_pass_arguments_to_function(get_npv_for_given_inflation, **kwargs)
+    inflation_factor, npv = get_npv_for_given_inflation(
+        amount=final_corpus_amount,
+        monthly_salary_detailed=yearly_monthly,  # Use yearly_monthly for pension functions
+        doj=kwargs.get('doj', '9/10/24'),
+        initial_inflation_rate=kwargs.get('initial_inflation_rate', 7.0),
+        final_inflation_rate=kwargs.get('final_inflation_rate', 3.0),
+        taper_period_yrs=kwargs.get('taper_period_yrs', 40)
+    )
     
     # XIRR calculation for investment performance
-    xirr_corpus = auto_pass_arguments_to_function(get_xirr, **kwargs)
+    xirr_corpus = get_xirr(
+        final_corpus_amount=final_corpus_amount,
+        monthly_salary_detailed=yearly_monthly,  # Use yearly_monthly for pension functions
+        scheme=kwargs.get('scheme', 'UPS')
+    )
     
     # Future pension projections
-    future_pension_matrix = auto_pass_arguments_to_function(get_future_pension, **kwargs)
+    future_pension_matrix = get_future_pension(
+        adjusted_pension=adjusted_pension,
+        early_retirement=kwargs.get('early_retirement', False),
+        dor=kwargs.get('dor', None),
+        dob=kwargs.get('dob', '20/07/1999'),
+        doj=kwargs.get('doj', '9/10/24'),
+        pension_duration=kwargs.get('pension_duration', 40),
+        scheme=kwargs.get('scheme', 'UPS'),
+        final_corpus_amount=final_corpus_amount,
+        annuity_rate=kwargs.get('annuity_rate', None),
+        initial_inflation_rate=kwargs.get('initial_inflation_rate', 7.0),
+        final_inflation_rate=kwargs.get('final_inflation_rate', 3.0),
+        taper_period_yrs=kwargs.get('taper_period_yrs', 40)
+    )
 
     # Store all financial metrics
     all_data['xirr_corpus'] = xirr_corpus
