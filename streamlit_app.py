@@ -645,8 +645,9 @@ if calculate_button:
                 'take_earlier_corpus_into_account': considering_existing_corpus,
                 'earlier_corpus': earlier_corpus,
                 'earlier_corpus_end_date': UPS_IMPLEMENT_DATE,
-                'govt_contrib_percent': 14.0,  # Government contribution percentage
-                'employee_contrib_percent': 10.0,  # Employee contribution percentage
+                # Contribution percentages are automatically set based on scheme:
+                # NPS: Employee 10%, Government 14%
+                # UPS: Employee 10%, Government 10%
                 'starting_level': starting_level,
                 'starting_year_row_in_level': starting_year,
                 'is_ias': is_ias,
@@ -1102,7 +1103,8 @@ if calculate_button:
                 <li>Unified Pension Scheme for government employees</li>
                 <li>Provides lumpsum at retirement</li>
                 <li>Monthly pension based on service duration</li>
-                <li>Government contribution of 14%</li>
+                <li>Employee contribution: 10%</li>
+                <li>Government contribution: 10%</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
@@ -1115,7 +1117,8 @@ if calculate_button:
                 <li>National Pension System with market-linked returns</li>
                 <li>60% corpus withdrawal allowed</li>
                 <li>40% must be used for annuity</li>
-                <li>Employee contribution of 10%</li>
+                <li>Employee contribution: 10%</li>
+                <li>Government contribution: 14%</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)

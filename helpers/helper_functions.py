@@ -513,10 +513,22 @@ def format_indian_currency(amount):
         first_group = integer_part[-3:]
         # Remaining digits
         remaining = integer_part[:-3]
-        # Add commas every 2 digits from right
-        formatted_remaining = ','.join([remaining[i:i+2] for i in range(0, len(remaining), 2)])
+        
+        # Handle remaining digits in groups of 2 from right to left
+        if len(remaining) == 1:
+            formatted_remaining = remaining
+        elif len(remaining) == 2:
+            formatted_remaining = remaining
+        else:
+            # For more than 2 digits, group them properly
+            formatted_remaining = ""
+            for i in range(len(remaining)):
+                if i > 0 and (len(remaining) - i) % 2 == 0:
+                    formatted_remaining += ","
+                formatted_remaining += remaining[i]
+        
         if formatted_remaining:
-            formatted_integer = formatted_remaining + ',' + first_group
+            formatted_integer = formatted_remaining + "," + first_group
         else:
             formatted_integer = first_group
     
@@ -531,3 +543,30 @@ def format_indian_currency(amount):
         result = "-" + result
     
     return result
+
+
+def test_indian_formatting():
+    """Test function to verify Indian currency formatting"""
+    test_cases = [
+        (1234567, "₹12,34,567"),
+        (1234567890, "₹1,23,45,67,890"),
+        (123456789, "₹12,34,56,789"),
+        (12345678, "₹1,23,45,678"),
+        (1234567.89, "₹12,34,567.89"),
+        (1234567890.12, "₹1,23,45,67,890.12"),
+        (1000, "₹1,000"),
+        (100, "₹100"),
+        (10, "₹10"),
+        (1, "₹1"),
+        (0, "₹0"),
+        (None, "₹0")
+    ]
+    
+    print("Testing Indian Currency Formatting:")
+    for amount, expected in test_cases:
+        result = format_indian_currency(amount)
+        status = "✅" if result == expected else "❌"
+        print(f"{status} {amount} -> {result} (expected: {expected})")
+
+if __name__ == "__main__":
+    test_indian_formatting()

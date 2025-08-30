@@ -291,14 +291,25 @@ def main_function(**kwargs) -> Dict[str, Any]:
     # - Employee and government contributions
     # - Investment returns based on age-based allocation
     # - Corpus growth over the entire career
+    
+    # Adjust contribution percentages based on scheme
+    if kwargs.get('scheme') == 'NPS':
+        # NPS: Employee 10%, Government 14%
+        effective_employee_contrib = 10.0
+        effective_govt_contrib = 14.0
+    else:
+        # UPS: Employee 10%, Government 10%
+        effective_employee_contrib = 10.0
+        effective_govt_contrib = 10.0
+    
     final_corpus_amount, yearly_corpus, _ = get_final_corpus(
         monthly_salary_detailed=monthly_salary_detailed,
         investment_option=kwargs.get('investment_option', 'Auto_LC50'),
         interest_rate_tapering_dict=kwargs.get('interest_rate_tapering_dict', {}),
         dob=kwargs.get('dob', '20/07/1999'),
         doj=kwargs.get('doj', '9/10/24'),
-        employee_contrib_percent=kwargs.get('employee_contrib_percent', 10.0),
-        govt_contrib_percent=kwargs.get('govt_contrib_percent', 14.0),
+        employee_contrib_percent=effective_employee_contrib,
+        govt_contrib_percent=effective_govt_contrib,
         existing_corpus=kwargs.get('existing_corpus', 0.0),
         existing_corpus_end_date=kwargs.get('existing_corpus_end_date', None)
     )
