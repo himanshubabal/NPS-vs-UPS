@@ -81,7 +81,7 @@ Open your browser and navigate to: **http://localhost:8501**
   - `Other Central Services`
 - **Default**: `IFS (AIS)`
 - **Impact**: 
-  - IAS: Special promotion rules (skips levels 13A, 16)
+  - IAS: Special promotion rules (skips levels 13A, 16); On promotion, granted extra increments in initial career, etc
   - AIS: Starts from Pay Level 10 minimum
   - Other: Full pay level range available
 
