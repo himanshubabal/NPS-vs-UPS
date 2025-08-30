@@ -469,3 +469,65 @@ def format_inr(amount: Union[int, float]) -> str:
 # def format_inr_no_paise(amount):
 #     """Format amount without decimal places."""
 #     return format_inr(round(amount)).split('.')[0]
+
+
+def format_indian_currency(amount):
+    """
+    Format amount in Indian currency style (₹xx,xx,xx,xxx)
+    
+    Args:
+        amount (float/int): Amount to format
+        
+    Returns:
+        str: Formatted amount in Indian style
+        
+    Example:
+        >>> format_indian_currency(1234567)
+        '₹12,34,567'
+        >>> format_indian_currency(1234567890)
+        '₹1,23,45,67,890'
+    """
+    if amount is None:
+        return "₹0"
+    
+    # Convert to integer if it's a whole number
+    if isinstance(amount, float) and amount.is_integer():
+        amount = int(amount)
+    
+    # Handle negative numbers
+    is_negative = amount < 0
+    amount = abs(amount)
+    
+    # Convert to string and split by decimal point
+    amount_str = str(amount)
+    if '.' in amount_str:
+        integer_part, decimal_part = amount_str.split('.')
+    else:
+        integer_part, decimal_part = amount_str, ""
+    
+    # Add commas in Indian style (every 2 digits from right, except first 3)
+    if len(integer_part) <= 3:
+        formatted_integer = integer_part
+    else:
+        # First group of 3 digits from right
+        first_group = integer_part[-3:]
+        # Remaining digits
+        remaining = integer_part[:-3]
+        # Add commas every 2 digits from right
+        formatted_remaining = ','.join([remaining[i:i+2] for i in range(0, len(remaining), 2)])
+        if formatted_remaining:
+            formatted_integer = formatted_remaining + ',' + first_group
+        else:
+            formatted_integer = first_group
+    
+    # Add decimal part if exists
+    if decimal_part:
+        result = f"₹{formatted_integer}.{decimal_part}"
+    else:
+        result = f"₹{formatted_integer}"
+    
+    # Add negative sign if needed
+    if is_negative:
+        result = "-" + result
+    
+    return result

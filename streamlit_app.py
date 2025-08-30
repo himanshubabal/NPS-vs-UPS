@@ -10,6 +10,7 @@ Version: 2.0 - Redesigned Interface
 
 from all_data import get_all_data
 from helpers.helper_functions import *
+from helpers.helper_functions import format_indian_currency
 from default_constants import *
 from pay_commissions import get_level_year_from_basic_pay, get_basic_pay
 from rates import get_DA_matrix
@@ -186,7 +187,7 @@ with st.sidebar:
         )
         starting_year = STARTING_YEAR_CPC
         starting_basic_pay = get_basic_pay(level=starting_level, year=starting_year, pay_matrix_df=PAY_MATRIX_7CPC_DF)
-        st.success(f"💰 Starting Basic Pay: ₹{starting_basic_pay:,}")
+        st.success(f"💰 Starting Basic Pay: {format_indian_currency(starting_basic_pay)}")
 
 # Main Content Area
 if starting_level == 0 and considering_existing_corpus:
@@ -735,12 +736,12 @@ if calculate_button:
         """, unsafe_allow_html=True)
         
         ups_metrics = {
-            "Final Corpus": f"₹{all_data_ups['final_corpus_amount']:,}",
-            "Monthly Pension": f"₹{all_data_ups['adjusted_pension']:,}",
-            "Withdrawal Amount": f"₹{all_data_ups['withdraw_corpus']:,}",
-            "Lumpsum": f"₹{all_data_ups['lumpsum_for_ups']:,}",
+            "Final Corpus": format_indian_currency(all_data_ups['final_corpus_amount']),
+            "Monthly Pension": format_indian_currency(all_data_ups['adjusted_pension']),
+            "Withdrawal Amount": format_indian_currency(all_data_ups['withdraw_corpus']),
+            "Lumpsum": format_indian_currency(all_data_ups['lumpsum_for_ups']),
             "XIRR": f"{all_data_ups['xirr_corpus']:.1f}%",
-            "NPV": f"₹{all_data_ups['npv']:,}"
+            "NPV": format_indian_currency(all_data_ups['npv'])
         }
         
         for metric, value in ups_metrics.items():
@@ -754,12 +755,12 @@ if calculate_button:
         """, unsafe_allow_html=True)
         
         nps_metrics = {
-            "Final Corpus": f"₹{all_data_nps['final_corpus_amount']:,}",
-            "Monthly Pension": f"₹{all_data_nps['adjusted_pension']:,}",
-            "Withdrawal Amount": f"₹{all_data_nps['withdraw_corpus']:,}",
+            "Final Corpus": format_indian_currency(all_data_nps['final_corpus_amount']),
+            "Monthly Pension": format_indian_currency(all_data_nps['adjusted_pension']),
+            "Withdrawal Amount": format_indian_currency(all_data_nps['withdraw_corpus']),
             "Lumpsum": "₹0 (No lumpsum)",
             "XIRR": f"{all_data_nps['xirr_corpus']:.1f}%",
-            "NPV": f"₹{all_data_nps['npv']:,}"
+            "NPV": format_indian_currency(all_data_nps['npv'])
         }
         
         for metric, value in nps_metrics.items():
@@ -806,6 +807,14 @@ if calculate_button:
         height=500
     )
     
+    # Update hover template to show Indian formatting
+    fig_corpus.update_traces(
+        hovertemplate="<b>%{fullData.name}</b><br>" +
+                     "Year: %{x}<br>" +
+                     "Corpus: ₹%{y:,.0f}<br>" +
+                     "<extra></extra>"
+    )
+    
     st.plotly_chart(fig_corpus, use_container_width=True)
     
     # Pension Projection Chart
@@ -843,6 +852,14 @@ if calculate_button:
         hovermode='x unified',
         template='plotly_white',
         height=500
+    )
+    
+    # Update hover template to show Indian formatting
+    fig_pension.update_traces(
+        hovertemplate="<b>%{fullData.name}</b><br>" +
+                     "Year: %{x}<br>" +
+                     "Monthly Pension: ₹%{y:,.0f}<br>" +
+                     "<extra></extra>"
     )
     
     st.plotly_chart(fig_pension, use_container_width=True)
@@ -953,13 +970,24 @@ if calculate_button:
     df_metrics['Difference'] = df_metrics['UPS'] - df_metrics['NPS']
     df_metrics['Winner'] = df_metrics['Difference'].apply(lambda x: 'UPS' if x > 0 else ('NPS' if x < 0 else 'Tie'))
     
-    # Format the table
+    # Format the table with Indian currency formatting
+    def format_indian_currency_df(value):
+        """Format value for dataframe display in Indian currency style"""
+        if pd.isna(value):
+            return ""
+        if isinstance(value, (int, float)):
+            return format_indian_currency(value)
+        return str(value)
+    
+    # Apply formatting to numeric columns
+    df_metrics_formatted = df_metrics.copy()
+    numeric_columns = ['UPS', 'NPS', 'Difference']
+    for col in numeric_columns:
+        df_metrics_formatted[col] = df_metrics_formatted[col].apply(format_indian_currency_df)
+    
     st.dataframe(
-        df_metrics,
+        df_metrics_formatted,
         column_config={
-            "UPS": st.column_config.NumberColumn("UPS (₹)", format="₹%d"),
-            "NPS": st.column_config.NumberColumn("NPS (₹)", format="₹%d"),
-            "Difference": st.column_config.NumberColumn("Difference (₹)", format="₹%d"),
             "Winner": st.column_config.SelectboxColumn("Winner", options=["UPS", "NPS", "Tie"])
         },
         hide_index=True,
@@ -1043,6 +1071,20 @@ if calculate_button:
                 xanchor="right",
                 x=1
             )
+        )
+        
+        # Update hover templates to show Indian formatting
+        fig_career.data[0].hovertemplate = (
+            "<b>Basic Pay</b><br>" +
+            "Year: %{x}<br>" +
+            "Basic Pay: ₹%{y:,.0f}<br>" +
+            "<extra></extra>"
+        )
+        fig_career.data[1].hovertemplate = (
+            "<b>Pay Level</b><br>" +
+            "Year: %{x}<br>" +
+            "Level: %{y}<br>" +
+            "<extra></extra>"
         )
         
         st.plotly_chart(fig_career, use_container_width=True)
