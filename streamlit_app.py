@@ -15,11 +15,9 @@ from default_constants import *
 from pay_commissions import get_level_year_from_basic_pay, get_basic_pay
 from rates import get_DA_matrix
 
-from babel.numbers import format_number, format_currency, format_compact_currency
 from datetime import datetime, date
 import streamlit as st
 import pandas as pd
-import altair as alt
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
@@ -368,9 +366,9 @@ if len(prom_period) == 0:
                         # Show final career summary
                         final_year = joining_year + sum(prom_period)
                         st.success(f"🎯 **Final Career Summary**: You will reach Level {current_level} in {final_year} at age {timeline_data[-1]['Age']}")
-            else:
-                st.info("🎯 You're already at the highest pay level or service period too short for promotions")
-                prom_period = DEFAULT_PROMOTION_TIMELINE[:max_promotions] if max_promotions > 0 else []
+                else:
+                    st.info("🎯 You're already at the highest pay level or service period too short for promotions")
+                    prom_period = DEFAULT_PROMOTION_TIMELINE[:max_promotions] if max_promotions > 0 else []
         
 
 
@@ -566,7 +564,7 @@ if rate_variability == 'Constant':
                 equity_rates.append(current_equity)
                 corporate_rates.append(current_corporate)
                 govt_rates.append(current_govt)
-    else:
+            else:
                 # Use final rates after taper period
                 inflation_rates.append(user_inflation_taper_final)
                 equity_rates.append(user_E_taper_final)
@@ -651,15 +649,15 @@ if rate_variability == 'Constant':
             C_initial = (user_C_taper_initial / total_initial) * 100.0
             G_initial = (user_G_taper_initial / total_initial) * 100.0
         else:
-        E_initial = user_E_taper_initial
-        C_initial = user_C_taper_initial
-        G_initial = user_G_taper_initial
+            E_initial = user_E_taper_initial
+            C_initial = user_C_taper_initial
+            G_initial = user_G_taper_initial
             
         if abs(total_final - 100.0) > 0.01:
             E_final = (user_E_taper_final / total_final) * 100.0
             C_final = (user_C_taper_final / total_final) * 100.0
             G_final = (user_G_taper_final / total_final) * 100.0
-    else:
+        else:
             E_final = user_E_taper_final
             C_final = user_C_taper_final
             G_final = user_G_taper_final
