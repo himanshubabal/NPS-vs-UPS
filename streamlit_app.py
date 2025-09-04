@@ -161,7 +161,7 @@ if considering_existing_corpus:
         )
         
         if starting_basic_pay > 0:
-        starting_level, starting_year = get_level_year_from_basic_pay(int(starting_basic_pay), PAY_MATRIX_7CPC_DF)
+            starting_level, starting_year = get_level_year_from_basic_pay(int(starting_basic_pay), PAY_MATRIX_7CPC_DF)
             if starting_level != 0:
                 st.success(f"✅ Pay Level: {starting_level}, Year: {starting_year}")
             else:
@@ -170,7 +170,7 @@ if considering_existing_corpus:
         else:
             starting_level = 0
     else:
-    earlier_corpus = None
+        earlier_corpus = None
         st.markdown("### 🎯 Starting Position")
         
         # Starting Level Selection
