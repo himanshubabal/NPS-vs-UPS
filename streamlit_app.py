@@ -142,8 +142,8 @@ with st.sidebar:
         value=is_considering_early_corpus,
         help='Include existing NPS Tier 1 corpus in calculations'
     )
-    
-    if considering_existing_corpus:
+
+if considering_existing_corpus:
         earlier_corpus = st.number_input(
             label='💰 Existing NPS Corpus (₹)',
             step=1000,
@@ -161,7 +161,7 @@ with st.sidebar:
         )
         
         if starting_basic_pay > 0:
-            starting_level, starting_year = get_level_year_from_basic_pay(int(starting_basic_pay), PAY_MATRIX_7CPC_DF)
+        starting_level, starting_year = get_level_year_from_basic_pay(int(starting_basic_pay), PAY_MATRIX_7CPC_DF)
             if starting_level != 0:
                 st.success(f"✅ Pay Level: {starting_level}, Year: {starting_year}")
             else:
@@ -170,7 +170,7 @@ with st.sidebar:
         else:
             starting_level = 0
     else:
-        earlier_corpus = None
+    earlier_corpus = None
         st.markdown("### 🎯 Starting Position")
         
         # Starting Level Selection
@@ -244,7 +244,7 @@ with tab1:
                     
                     col_prom_level, col_prom_year, col_prom_info = st.columns([1.2, 1.2, 1.6])
                     
-                    with col_prom_level:
+            with col_prom_level:
                         next_level = st.selectbox(
                             f'Next Level',
                             options=PAY_LEVELS[starting_level_index + curr_level + 1:],
@@ -252,7 +252,7 @@ with tab1:
                             help=f'Select the next pay level after {starting_level}'
                         )
                     
-                    with col_prom_year:
+            with col_prom_year:
                         # Default promotion timeline from constants
                         default_timeline = DEFAULT_PROMOTION_TIMELINE
                         default_value = default_timeline[curr_level] if curr_level < len(default_timeline) else 5
@@ -273,7 +273,7 @@ with tab1:
                             total_promotion_years = sum(prom_period) + prom_year
                             if total_promotion_years > years_of_service:
                                 st.error(f"⚠️ **Warning**: Total promotion years ({total_promotion_years:.1f}) exceeds your service period ({years_of_service:.1f} years)")
-                            else:
+                    else:
                                 promotion_year = joining_year + total_promotion_years
                                 st.success(f"🎯 **Level {next_level} in {promotion_year}** (after {prom_year} years)")
                         
@@ -297,7 +297,7 @@ with tab1:
                             st.session_state.num_promotions = max(1, st.session_state.num_promotions - 1)
                             st.rerun()
                 
-                if len(prom_period) == 0:
+if len(prom_period) == 0:
                     prom_period = DEFAULT_PROMOTION_TIMELINE[:max_promotions]
                     st.info("ℹ️ Using default promotion schedule")
                 
@@ -383,7 +383,7 @@ with tab2:
         help='Choose between constant rates or rates that change over time'
     )
     
-    if rate_variability == 'Constant':
+if rate_variability == 'Constant':
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
@@ -564,7 +564,7 @@ with tab2:
                 equity_rates.append(current_equity)
                 corporate_rates.append(current_corporate)
                 govt_rates.append(current_govt)
-            else:
+    else:
                 # Use final rates after taper period
                 inflation_rates.append(user_inflation_taper_final)
                 equity_rates.append(user_E_taper_final)
@@ -649,15 +649,15 @@ with tab2:
             C_initial = (user_C_taper_initial / total_initial) * 100.0
             G_initial = (user_G_taper_initial / total_initial) * 100.0
         else:
-            E_initial = user_E_taper_initial
-            C_initial = user_C_taper_initial
-            G_initial = user_G_taper_initial
+        E_initial = user_E_taper_initial
+        C_initial = user_C_taper_initial
+        G_initial = user_G_taper_initial
             
         if abs(total_final - 100.0) > 0.01:
             E_final = (user_E_taper_final / total_final) * 100.0
             C_final = (user_C_taper_final / total_final) * 100.0
             G_final = (user_G_taper_final / total_final) * 100.0
-        else:
+    else:
             E_final = user_E_taper_final
             C_final = user_C_taper_final
             G_final = user_G_taper_final
@@ -695,7 +695,7 @@ with tab3:
     
     with col3:
         st.markdown("**Salary Increase %**")
-        st.markdown("*Net increase excluding DA component*")
+        st.markdown("*Total increase including DA component*")
         for i in range(len(DEFAULT_PAY_COMMISSION_YEARS)):
             try:
                 # Calculate DA at the time of Pay Commission implementation
@@ -711,9 +711,10 @@ with tab3:
                 else:
                     estimated_da = 0.30  # Future CPCs, DA around 30%
                 
-                # Correct formula: Salary Increase % = Fitment Factor - 1 - DA%
-                # This gives the net salary increase excluding DA
-                percent_inc = round(((fit_list[i] - 1 - estimated_da) * 100.0), 1)
+                # Correct formula: Salary Increase % = (Fitment Factor - 1) * 100%
+                # This gives the total salary increase including DA
+                # The fitment factor already accounts for the total increase including DA
+                percent_inc = round(((fit_list[i] - 1) * 100.0), 1)
                 
                 # Ensure the percentage is reasonable (not negative)
                 if percent_inc < 0:
