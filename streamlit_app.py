@@ -144,50 +144,50 @@ with st.sidebar:
     )
 
 if considering_existing_corpus:
-        earlier_corpus = st.number_input(
-            label='💰 Existing NPS Corpus (₹)',
-            step=1000,
-            min_value=0,
-            help='Enter your current NPS Tier 1 corpus amount',
-            key='earlier_corpus'
-        )
-        
-        starting_basic_pay = st.number_input(
-            label='💵 Current Basic Pay (7th CPC)',
-            step=100,
-            min_value=0,
-            help='Enter your current basic pay according to 7th CPC',
-            key='starting_basic_pay'
-        )
-        
-        if starting_basic_pay > 0:
-            starting_level, starting_year = get_level_year_from_basic_pay(int(starting_basic_pay), PAY_MATRIX_7CPC_DF)
-            if starting_level != 0:
-                st.success(f"✅ Pay Level: {starting_level}, Year: {starting_year}")
-            else:
-                st.error("❌ Invalid Basic Pay. Please check the amount.")
-                starting_level = 0
+    earlier_corpus = st.number_input(
+        label='💰 Existing NPS Corpus (₹)',
+        step=1000,
+        min_value=0,
+        help='Enter your current NPS Tier 1 corpus amount',
+        key='earlier_corpus'
+    )
+    
+    starting_basic_pay = st.number_input(
+        label='💵 Current Basic Pay (7th CPC)',
+        step=100,
+        min_value=0,
+        help='Enter your current basic pay according to 7th CPC',
+        key='starting_basic_pay'
+    )
+    
+    if starting_basic_pay > 0:
+        starting_level, starting_year = get_level_year_from_basic_pay(int(starting_basic_pay), PAY_MATRIX_7CPC_DF)
+        if starting_level != 0:
+            st.success(f"✅ Pay Level: {starting_level}, Year: {starting_year}")
         else:
+            st.error("❌ Invalid Basic Pay. Please check the amount.")
             starting_level = 0
     else:
-        earlier_corpus = None
-        st.markdown("### 🎯 Starting Position")
-        
-        # Starting Level Selection
-        pay_levels_list = PAY_LEVELS
-        if choose_service != 'Other Central Services':
-            pay_levels_list = PAY_LEVELS[PAY_LEVELS.index('10'):]
-            st.info(f"🎯 {choose_service} starts from Pay Level 10")
-        
-        starting_level = st.selectbox(
-            label='📊 Starting Pay Level (7th CPC)',
-            options=pay_levels_list,
-            help='Select your starting pay level',
-            key='starting_level'
-        )
-        starting_year = STARTING_YEAR_CPC
-        starting_basic_pay = get_basic_pay(level=starting_level, year=starting_year, pay_matrix_df=PAY_MATRIX_7CPC_DF)
-        st.success(f"💰 Starting Basic Pay: {format_indian_currency(starting_basic_pay)}")
+        starting_level = 0
+else:
+    earlier_corpus = None
+    st.markdown("### 🎯 Starting Position")
+    
+    # Starting Level Selection
+    pay_levels_list = PAY_LEVELS
+    if choose_service != 'Other Central Services':
+        pay_levels_list = PAY_LEVELS[PAY_LEVELS.index('10'):]
+        st.info(f"🎯 {choose_service} starts from Pay Level 10")
+    
+    starting_level = st.selectbox(
+        label='📊 Starting Pay Level (7th CPC)',
+        options=pay_levels_list,
+        help='Select your starting pay level',
+        key='starting_level'
+    )
+    starting_year = STARTING_YEAR_CPC
+    starting_basic_pay = get_basic_pay(level=starting_level, year=starting_year, pay_matrix_df=PAY_MATRIX_7CPC_DF)
+    st.success(f"💰 Starting Basic Pay: {format_indian_currency(starting_basic_pay)}")
 
 # Main Content Area
 if starting_level == 0 and considering_existing_corpus:
@@ -245,61 +245,61 @@ with tab1:
                     col_prom_level, col_prom_year, col_prom_info = st.columns([1.2, 1.2, 1.6])
                     
             with col_prom_level:
-                        next_level = st.selectbox(
-                            f'Next Level',
-                            options=PAY_LEVELS[starting_level_index + curr_level + 1:],
-                            key=f'col_level_year_{curr_level}',
-                            help=f'Select the next pay level after {starting_level}'
-                        )
+                next_level = st.selectbox(
+                    f'Next Level',
+                    options=PAY_LEVELS[starting_level_index + curr_level + 1:],
+                    key=f'col_level_year_{curr_level}',
+                    help=f'Select the next pay level after {starting_level}'
+                )
                     
             with col_prom_year:
-                        # Default promotion timeline from constants
-                        default_timeline = DEFAULT_PROMOTION_TIMELINE
-                        default_value = default_timeline[curr_level] if curr_level < len(default_timeline) else 5
-                        
-                        prom_year = st.number_input(
-                            f'Years to reach Level {next_level}',
-                            min_value=1,
-                            max_value=int(years_of_service),
-                            value=default_value,
-                            key=f'col_prom_year_{curr_level}',
-                            help=f'How many years to reach Level {next_level}'
-                        )
+                # Default promotion timeline from constants
+                default_timeline = DEFAULT_PROMOTION_TIMELINE
+                default_value = default_timeline[curr_level] if curr_level < len(default_timeline) else 5
+                
+                prom_year = st.number_input(
+                    f'Years to reach Level {next_level}',
+                    min_value=1,
+                    max_value=int(years_of_service),
+                    value=default_value,
+                    key=f'col_prom_year_{curr_level}',
+                    help=f'How many years to reach Level {next_level}'
+                )
                     
-                    with col_prom_info:
-                        # Show promotion year info in the same row to save vertical space
-                        if next_level and prom_year:
-                            # Validate total promotion years don't exceed service years
-                            total_promotion_years = sum(prom_period) + prom_year
-                            if total_promotion_years > years_of_service:
-                                st.error(f"⚠️ **Warning**: Total promotion years ({total_promotion_years:.1f}) exceeds your service period ({years_of_service:.1f} years)")
+            with col_prom_info:
+                # Show promotion year info in the same row to save vertical space
+                if next_level and prom_year:
+                    # Validate total promotion years don't exceed service years
+                    total_promotion_years = sum(prom_period) + prom_year
+                    if total_promotion_years > years_of_service:
+                        st.error(f"⚠️ **Warning**: Total promotion years ({total_promotion_years:.1f}) exceeds your service period ({years_of_service:.1f} years)")
                     else:
-                                promotion_year = joining_year + total_promotion_years
-                                st.success(f"🎯 **Level {next_level} in {promotion_year}** (after {prom_year} years)")
-                        
-                        prom_level.append(next_level)
-                        prom_period.append(prom_year)
+                        promotion_year = joining_year + total_promotion_years
+                        st.success(f"🎯 **Level {next_level} in {promotion_year}** (after {prom_year} years)")
                 
-                # Add/Remove promotion controls at the end
-                st.markdown("---")
-                col_add, col_remove = st.columns([1, 1])
-                with col_add:
-                    if st.button("➕ Add Promotion", key="add_promotion"):
-                        if 'num_promotions' not in st.session_state:
-                            st.session_state.num_promotions = max_promotions  # Start with all available
-                        else:
-                            st.session_state.num_promotions = min(st.session_state.num_promotions + 1, max_promotions)
+                prom_level.append(next_level)
+                prom_period.append(prom_year)
+            
+            # Add/Remove promotion controls at the end
+            st.markdown("---")
+            col_add, col_remove = st.columns([1, 1])
+            with col_add:
+                if st.button("➕ Add Promotion", key="add_promotion"):
+                    if 'num_promotions' not in st.session_state:
+                        st.session_state.num_promotions = max_promotions  # Start with all available
+                    else:
+                        st.session_state.num_promotions = min(st.session_state.num_promotions + 1, max_promotions)
+                    st.rerun()
+            
+            with col_remove:
+                if st.button("➖ Remove Promotion", key="remove_promotion"):
+                    if 'num_promotions' in st.session_state:
+                        st.session_state.num_promotions = max(1, st.session_state.num_promotions - 1)
                         st.rerun()
-                
-                with col_remove:
-                    if st.button("➖ Remove Promotion", key="remove_promotion"):
-                        if 'num_promotions' in st.session_state:
-                            st.session_state.num_promotions = max(1, st.session_state.num_promotions - 1)
-                            st.rerun()
-                
-if len(prom_period) == 0:
-                    prom_period = DEFAULT_PROMOTION_TIMELINE[:max_promotions]
-                    st.info("ℹ️ Using default promotion schedule")
+            
+            if len(prom_period) == 0:
+                prom_period = DEFAULT_PROMOTION_TIMELINE[:max_promotions]
+                st.info("ℹ️ Using default promotion schedule")
                 
                 # Career Summary moved here to expand horizontal space
                 st.markdown("---")
@@ -383,7 +383,7 @@ with tab2:
         help='Choose between constant rates or rates that change over time'
     )
     
-if rate_variability == 'Constant':
+    if rate_variability == 'Constant':
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
@@ -564,7 +564,7 @@ if rate_variability == 'Constant':
                 equity_rates.append(current_equity)
                 corporate_rates.append(current_corporate)
                 govt_rates.append(current_govt)
-    else:
+            else:
                 # Use final rates after taper period
                 inflation_rates.append(user_inflation_taper_final)
                 equity_rates.append(user_E_taper_final)
@@ -649,15 +649,15 @@ if rate_variability == 'Constant':
             C_initial = (user_C_taper_initial / total_initial) * 100.0
             G_initial = (user_G_taper_initial / total_initial) * 100.0
         else:
-        E_initial = user_E_taper_initial
-        C_initial = user_C_taper_initial
-        G_initial = user_G_taper_initial
+            E_initial = user_E_taper_initial
+            C_initial = user_C_taper_initial
+            G_initial = user_G_taper_initial
             
         if abs(total_final - 100.0) > 0.01:
             E_final = (user_E_taper_final / total_final) * 100.0
             C_final = (user_C_taper_final / total_final) * 100.0
             G_final = (user_G_taper_final / total_final) * 100.0
-    else:
+        else:
             E_final = user_E_taper_final
             C_final = user_C_taper_final
             G_final = user_G_taper_final
