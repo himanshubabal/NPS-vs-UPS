@@ -142,6 +142,25 @@ with st.sidebar:
         value=is_considering_early_corpus,
         help='Include existing NPS Tier 1 corpus in calculations'
     )
+    
+    # Starting Position Section
+    st.markdown("### 🎯 Starting Position")
+    
+    # Starting Level Selection
+    pay_levels_list = PAY_LEVELS
+    if choose_service != 'Other Central Services':
+        pay_levels_list = PAY_LEVELS[PAY_LEVELS.index('10'):]
+        st.info(f"🎯 {choose_service} starts from Pay Level 10")
+    
+    starting_level = st.selectbox(
+        label='📊 Starting Pay Level (7th CPC)',
+        options=pay_levels_list,
+        help='Select your starting pay level',
+        key='starting_level'
+    )
+    starting_year = STARTING_YEAR_CPC
+    starting_basic_pay = get_basic_pay(level=starting_level, year=starting_year, pay_matrix_df=PAY_MATRIX_7CPC_DF)
+    st.success(f"💰 Starting Basic Pay: {format_indian_currency(starting_basic_pay)}")
 
 if considering_existing_corpus:
     earlier_corpus = st.number_input(
@@ -171,23 +190,6 @@ if considering_existing_corpus:
         starting_level = 0
 else:
     earlier_corpus = None
-    st.markdown("### 🎯 Starting Position")
-    
-    # Starting Level Selection
-    pay_levels_list = PAY_LEVELS
-    if choose_service != 'Other Central Services':
-        pay_levels_list = PAY_LEVELS[PAY_LEVELS.index('10'):]
-        st.info(f"🎯 {choose_service} starts from Pay Level 10")
-    
-    starting_level = st.selectbox(
-        label='📊 Starting Pay Level (7th CPC)',
-        options=pay_levels_list,
-        help='Select your starting pay level',
-        key='starting_level'
-    )
-    starting_year = STARTING_YEAR_CPC
-    starting_basic_pay = get_basic_pay(level=starting_level, year=starting_year, pay_matrix_df=PAY_MATRIX_7CPC_DF)
-    st.success(f"💰 Starting Basic Pay: {format_indian_currency(starting_basic_pay)}")
 
 # Main Content Area
 if starting_level == 0 and considering_existing_corpus:
@@ -297,7 +299,7 @@ with tab1:
                         st.session_state.num_promotions = max(1, st.session_state.num_promotions - 1)
                         st.rerun()
             
-            if len(prom_period) == 0:
+if len(prom_period) == 0:
                 prom_period = DEFAULT_PROMOTION_TIMELINE[:max_promotions]
                 st.info("ℹ️ Using default promotion schedule")
                 
@@ -383,7 +385,7 @@ with tab2:
         help='Choose between constant rates or rates that change over time'
     )
     
-    if rate_variability == 'Constant':
+if rate_variability == 'Constant':
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
@@ -564,7 +566,7 @@ with tab2:
                 equity_rates.append(current_equity)
                 corporate_rates.append(current_corporate)
                 govt_rates.append(current_govt)
-            else:
+    else:
                 # Use final rates after taper period
                 inflation_rates.append(user_inflation_taper_final)
                 equity_rates.append(user_E_taper_final)
@@ -649,15 +651,15 @@ with tab2:
             C_initial = (user_C_taper_initial / total_initial) * 100.0
             G_initial = (user_G_taper_initial / total_initial) * 100.0
         else:
-            E_initial = user_E_taper_initial
-            C_initial = user_C_taper_initial
-            G_initial = user_G_taper_initial
+        E_initial = user_E_taper_initial
+        C_initial = user_C_taper_initial
+        G_initial = user_G_taper_initial
             
         if abs(total_final - 100.0) > 0.01:
             E_final = (user_E_taper_final / total_final) * 100.0
             C_final = (user_C_taper_final / total_final) * 100.0
             G_final = (user_G_taper_final / total_final) * 100.0
-        else:
+    else:
             E_final = user_E_taper_final
             C_final = user_C_taper_final
             G_final = user_G_taper_final
