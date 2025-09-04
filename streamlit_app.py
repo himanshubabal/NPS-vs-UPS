@@ -435,6 +435,20 @@ with tab2:
     else:  # Tapering Case
         st.markdown("#### 📈 Rate Tapering Configuration")
         
+        # Explanation of Rate Tapering
+        st.info("""
+        **What is Rate Tapering?**
+        
+        Rate tapering means that investment returns and inflation rates gradually decrease over time, 
+        reflecting the transition from a high-growth economy to a more mature, stable economy.
+        
+        - **Initial Rates**: Higher returns/inflation at the start of your career
+        - **Final Rates**: Lower, more conservative returns/inflation near retirement
+        - **Tapering Period**: The time over which rates gradually change (typically 40 years)
+        
+        This approach provides more realistic long-term projections compared to constant rates.
+        """)
+        
         # Create a more organized layout with better spacing
         st.markdown("---")
         
@@ -516,6 +530,108 @@ with tab2:
                 key='G_taper_final',
                 help='Ending government bond return rate'
             )
+        
+        st.markdown("---")
+        
+        # Rate Tapering Visualization
+        st.markdown("**📊 Rate Tapering Visualization**")
+        
+        # Create visualization data
+        years = list(range(2025, 2065))  # 40-year period
+        taper_period = 40
+        
+        # Calculate tapering rates for each year
+        inflation_rates = []
+        equity_rates = []
+        corporate_rates = []
+        govt_rates = []
+        
+        for year in years:
+            years_elapsed = year - 2025
+            if years_elapsed <= taper_period:
+                # Linear tapering
+                progress = years_elapsed / taper_period
+                
+                # Inflation tapering
+                current_inflation = user_inflation_taper_initial + (user_inflation_taper_final - user_inflation_taper_initial) * progress
+                inflation_rates.append(current_inflation)
+                
+                # Investment return tapering
+                current_equity = user_E_taper_initial + (user_E_taper_final - user_E_taper_initial) * progress
+                current_corporate = user_C_taper_initial + (user_C_taper_final - user_C_taper_initial) * progress
+                current_govt = user_G_taper_initial + (user_G_taper_final - user_G_taper_initial) * progress
+                
+                equity_rates.append(current_equity)
+                corporate_rates.append(current_corporate)
+                govt_rates.append(current_govt)
+            else:
+                # Use final rates after taper period
+                inflation_rates.append(user_inflation_taper_final)
+                equity_rates.append(user_E_taper_final)
+                corporate_rates.append(user_C_taper_final)
+                govt_rates.append(user_G_taper_final)
+        
+        # Create the visualization chart
+        fig_tapering = go.Figure()
+        
+        # Add traces for each rate type
+        fig_tapering.add_trace(go.Scatter(
+            x=years,
+            y=inflation_rates,
+            mode='lines+markers',
+            name='Inflation Rate',
+            line=dict(color='#e74c3c', width=3),
+            marker=dict(size=4)
+        ))
+        
+        fig_tapering.add_trace(go.Scatter(
+            x=years,
+            y=equity_rates,
+            mode='lines+markers',
+            name='Equity Returns',
+            line=dict(color='#f39c12', width=3),
+            marker=dict(size=4)
+        ))
+        
+        fig_tapering.add_trace(go.Scatter(
+            x=years,
+            y=corporate_rates,
+            mode='lines+markers',
+            name='Corporate Bond Returns',
+            line=dict(color='#3498db', width=3),
+            marker=dict(size=4)
+        ))
+        
+        fig_tapering.add_trace(go.Scatter(
+            x=years,
+            y=govt_rates,
+            mode='lines+markers',
+            name='Government Bond Returns',
+            line=dict(color='#27ae60', width=3),
+            marker=dict(size=4)
+        ))
+        
+        # Update layout
+        fig_tapering.update_layout(
+            title="Rate Tapering Over Time (2025-2065)",
+            xaxis_title="Year",
+            yaxis_title="Rate (%)",
+            height=400,
+            showlegend=True,
+            template='plotly_white',
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="center",
+                x=0.5
+            ),
+            yaxis=dict(
+                tickformat=".1f"
+            )
+        )
+        
+        st.plotly_chart(fig_tapering, use_container_width=True)
         
         st.markdown("---")
         
