@@ -245,40 +245,40 @@ with tab1:
                     col_prom_level, col_prom_year, col_prom_info = st.columns([1.2, 1.2, 1.6])
                     
             with col_prom_level:
-                next_level = st.selectbox(
-                    f'Next Level',
-                    options=PAY_LEVELS[starting_level_index + curr_level + 1:],
-                    key=f'col_level_year_{curr_level}',
-                    help=f'Select the next pay level after {starting_level}'
-                )
-                    
+                        next_level = st.selectbox(
+                            f'Next Level',
+                            options=PAY_LEVELS[starting_level_index + curr_level + 1:],
+                            key=f'col_level_year_{curr_level}',
+                            help=f'Select the next pay level after {starting_level}'
+                        )
+                            
             with col_prom_year:
-                # Default promotion timeline from constants
-                default_timeline = DEFAULT_PROMOTION_TIMELINE
-                default_value = default_timeline[curr_level] if curr_level < len(default_timeline) else 5
-                
-                prom_year = st.number_input(
-                    f'Years to reach Level {next_level}',
-                    min_value=1,
-                    max_value=int(years_of_service),
-                    value=default_value,
-                    key=f'col_prom_year_{curr_level}',
-                    help=f'How many years to reach Level {next_level}'
-                )
-                    
-            with col_prom_info:
-                # Show promotion year info in the same row to save vertical space
-                if next_level and prom_year:
-                    # Validate total promotion years don't exceed service years
-                    total_promotion_years = sum(prom_period) + prom_year
-                    if total_promotion_years > years_of_service:
-                        st.error(f"⚠️ **Warning**: Total promotion years ({total_promotion_years:.1f}) exceeds your service period ({years_of_service:.1f} years)")
+                        # Default promotion timeline from constants
+                        default_timeline = DEFAULT_PROMOTION_TIMELINE
+                        default_value = default_timeline[curr_level] if curr_level < len(default_timeline) else 5
+                        
+                        prom_year = st.number_input(
+                            f'Years to reach Level {next_level}',
+                            min_value=1,
+                            max_value=int(years_of_service),
+                            value=default_value,
+                            key=f'col_prom_year_{curr_level}',
+                            help=f'How many years to reach Level {next_level}'
+                        )
+                            
+                    with col_prom_info:
+                        # Show promotion year info in the same row to save vertical space
+                        if next_level and prom_year:
+                            # Validate total promotion years don't exceed service years
+                            total_promotion_years = sum(prom_period) + prom_year
+                            if total_promotion_years > years_of_service:
+                                st.error(f"⚠️ **Warning**: Total promotion years ({total_promotion_years:.1f}) exceeds your service period ({years_of_service:.1f} years)")
                     else:
-                        promotion_year = joining_year + total_promotion_years
-                        st.success(f"🎯 **Level {next_level} in {promotion_year}** (after {prom_year} years)")
-                
-                prom_level.append(next_level)
-                prom_period.append(prom_year)
+                                promotion_year = joining_year + total_promotion_years
+                                st.success(f"🎯 **Level {next_level} in {promotion_year}** (after {prom_year} years)")
+                        
+                        prom_level.append(next_level)
+                        prom_period.append(prom_year)
             
             # Add/Remove promotion controls at the end
             st.markdown("---")
@@ -384,286 +384,286 @@ with tab2:
     )
     
 if rate_variability == 'Constant':
-        col1, col2, col3, col4 = st.columns(4)
-        
-        with col1:
-            user_inflation_const = st.number_input(
-                label='📈 Inflation Rate (%)',
-                step=0.1,
-                min_value=0.0,
-                max_value=20.0,
-                value=DEFAULT_CONSTANT_INFLATION_RATE,
-                help='Annual inflation rate throughout your career'
-            )
-        
-        with col2:
-            user_E_cons = st.number_input(
-                label='📊 Equity Returns (%)',
-                step=0.1,
-                min_value=0.0,
-                max_value=15.0,
-                value=DEFAULT_E,
-                help='Annual equity investment returns'
-            )
-        
-        with col3:
-            user_C_cons = st.number_input(
-                label='🏢 Corporate Bond Returns (%)',
-                step=0.1,
-                min_value=0.0,
-                max_value=10.0,
-                value=DEFAULT_C,
-                help='Annual corporate bond returns'
-            )
-        
-        with col4:
-            user_G_cons = st.number_input(
-                label='🏛️ Government Bond Returns (%)',
-                step=0.1,
-                min_value=0.0,
-                max_value=10.0,
-                value=DEFAULT_G,
-                help='Annual government bond returns'
-            )
-        
-        # Set constant rates
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        user_inflation_const = st.number_input(
+            label='📈 Inflation Rate (%)',
+            step=0.1,
+            min_value=0.0,
+            max_value=20.0,
+            value=DEFAULT_CONSTANT_INFLATION_RATE,
+            help='Annual inflation rate throughout your career'
+        )
+    
+    with col2:
+        user_E_cons = st.number_input(
+            label='📊 Equity Returns (%)',
+            step=0.1,
+            min_value=0.0,
+            max_value=15.0,
+            value=DEFAULT_E,
+            help='Annual equity investment returns'
+        )
+    
+    with col3:
+        user_C_cons = st.number_input(
+            label='🏢 Corporate Bond Returns (%)',
+            step=0.1,
+            min_value=0.0,
+            max_value=10.0,
+            value=DEFAULT_C,
+            help='Annual corporate bond returns'
+        )
+    
+    with col4:
+        user_G_cons = st.number_input(
+            label='🏛️ Government Bond Returns (%)',
+            step=0.1,
+            min_value=0.0,
+            max_value=10.0,
+            value=DEFAULT_G,
+            help='Annual government bond returns'
+        )
+    
+    # Set constant rates
         initial_inflation_rate = final_inflation_rate = user_inflation_const
         E_initial = E_final = user_E_cons
         C_initial = C_final = user_C_cons
         G_initial = G_final = user_G_cons
         
-    else:  # Tapering Case
-        st.markdown("#### 📈 Rate Tapering Configuration")
-        
-        # Explanation of Rate Tapering
-        st.info("""
-        **What is Rate Tapering?**
-        
-        Rate tapering means that investment returns and inflation rates gradually decrease over time, 
-        reflecting the transition from a high-growth economy to a more mature, stable economy.
-        
-        - **Initial Rates**: Higher returns/inflation at the start of your career
-        - **Final Rates**: Lower, more conservative returns/inflation near retirement
-        - **Tapering Period**: The time over which rates gradually change (typically 40 years)
-        
-        This approach provides more realistic long-term projections compared to constant rates.
-        """)
-        
-        # Create a more organized layout with better spacing
-        st.markdown("---")
-        
-        # Inflation Rates Section
-        st.markdown("**📊 Inflation Rates**")
-        col_inf1, col_inf2 = st.columns(2)
-        with col_inf1:
-            user_inflation_taper_initial = st.number_input(
-                label='Initial Inflation (%)',
-                step=0.1,
-                min_value=0.0,
-                max_value=20.0,
-                value=DEFAULT_INITIAL_INFLATION_RATE,
-                help='Starting inflation rate that gradually decreases over time'
-            )
-        with col_inf2:
-            user_inflation_taper_final = st.number_input(
-                label='Final Inflation (%)',
-                step=0.1,
-                min_value=0.0,
-                max_value=20.0,
-                value=DEFAULT_FINAL_INFLATION_RATE,
-                help='Ending inflation rate after the taper period'
-            )
-        
-        st.markdown("---")
-        
-        # Investment Returns Section
-        st.markdown("**💰 Investment Returns**")
-        st.markdown("*Returns that gradually decrease from initial to final values over the taper period*")
-        
-        # Create a more organized 3-column layout for investment returns
-        col_E, col_C, col_G = st.columns(3)
-        
-        with col_E:
-            st.markdown("**📈 Equity Returns**")
-            st.markdown("*Higher returns, higher risk*")
-            user_E_taper_initial = st.number_input(
-                'Initial (%)', 
-                value=DEFAULT_E_INITIAL, 
-                key='E_taper_initial',
-                help='Starting equity return rate'
-            )
-            user_E_taper_final = st.number_input(
-                'Final (%)', 
-                value=DEFAULT_E_FINAL, 
-                key='E_taper_final',
-                help='Ending equity return rate'
-            )
-        
-        with col_C:
-            st.markdown("**🏢 Corporate Bond Returns**")
-            st.markdown("*Medium returns, medium risk*")
-            user_C_taper_initial = st.number_input(
-                'Initial (%)', 
-                value=DEFAULT_C_INITIAL, 
-                key='C_taper_initial',
-                help='Starting corporate bond return rate'
-            )
-            user_C_taper_final = st.number_input(
-                'Final (%)', 
-                value=DEFAULT_C_FINAL, 
-                key='C_taper_final',
-                help='Ending corporate bond return rate'
-            )
-        
-        with col_G:
-            st.markdown("**🏛️ Government Bond Returns**")
-            st.markdown("*Lower returns, lower risk*")
-            user_G_taper_initial = st.number_input(
-                'Initial (%)', 
-                value=DEFAULT_G_INITIAL, 
-                key='G_taper_initial',
-                help='Starting government bond return rate'
-            )
-            user_G_taper_final = st.number_input(
-                'Final (%)', 
-                value=DEFAULT_G_FINAL, 
-                key='G_taper_final',
-                help='Ending government bond return rate'
-            )
-        
-        st.markdown("---")
-        
-        # Rate Tapering Visualization
-        st.markdown("**📊 Rate Tapering Visualization**")
-        
-        # Create visualization data
-        years = list(range(2025, 2065))  # 40-year period
-        taper_period = 40
-        
-        # Calculate tapering rates for each year
-        inflation_rates = []
-        equity_rates = []
-        corporate_rates = []
-        govt_rates = []
-        
-        for year in years:
-            years_elapsed = year - 2025
-            if years_elapsed <= taper_period:
-                # Linear tapering
-                progress = years_elapsed / taper_period
-                
-                # Inflation tapering
-                current_inflation = user_inflation_taper_initial + (user_inflation_taper_final - user_inflation_taper_initial) * progress
-                inflation_rates.append(current_inflation)
-                
-                # Investment return tapering
-                current_equity = user_E_taper_initial + (user_E_taper_final - user_E_taper_initial) * progress
-                current_corporate = user_C_taper_initial + (user_C_taper_final - user_C_taper_initial) * progress
-                current_govt = user_G_taper_initial + (user_G_taper_final - user_G_taper_initial) * progress
-                
-                equity_rates.append(current_equity)
-                corporate_rates.append(current_corporate)
-                govt_rates.append(current_govt)
-            else:
-                # Use final rates after taper period
-                inflation_rates.append(user_inflation_taper_final)
-                equity_rates.append(user_E_taper_final)
-                corporate_rates.append(user_C_taper_final)
-                govt_rates.append(user_G_taper_final)
-        
-        # Create the visualization chart
-        fig_tapering = go.Figure()
-        
-        # Add traces for each rate type
-        fig_tapering.add_trace(go.Scatter(
-            x=years,
-            y=inflation_rates,
-            mode='lines+markers',
-            name='Inflation Rate',
-            line=dict(color='#e74c3c', width=3),
-            marker=dict(size=4)
-        ))
-        
-        fig_tapering.add_trace(go.Scatter(
-            x=years,
-            y=equity_rates,
-            mode='lines+markers',
-            name='Equity Returns',
-            line=dict(color='#f39c12', width=3),
-            marker=dict(size=4)
-        ))
-        
-        fig_tapering.add_trace(go.Scatter(
-            x=years,
-            y=corporate_rates,
-            mode='lines+markers',
-            name='Corporate Bond Returns',
-            line=dict(color='#3498db', width=3),
-            marker=dict(size=4)
-        ))
-        
-        fig_tapering.add_trace(go.Scatter(
-            x=years,
-            y=govt_rates,
-            mode='lines+markers',
-            name='Government Bond Returns',
-            line=dict(color='#27ae60', width=3),
-            marker=dict(size=4)
-        ))
-        
-        # Update layout
-        fig_tapering.update_layout(
-            title="Rate Tapering Over Time (2025-2065)",
-            xaxis_title="Year",
-            yaxis_title="Rate (%)",
-            height=400,
-            showlegend=True,
-            template='plotly_white',
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="center",
-                x=0.5
-            ),
-            yaxis=dict(
-                tickformat=".1f"
-            )
+else:  # Tapering Case
+    st.markdown("#### 📈 Rate Tapering Configuration")
+    
+    # Explanation of Rate Tapering
+    st.info("""
+    **What is Rate Tapering?**
+    
+    Rate tapering means that investment returns and inflation rates gradually decrease over time, 
+    reflecting the transition from a high-growth economy to a more mature, stable economy.
+    
+    - **Initial Rates**: Higher returns/inflation at the start of your career
+    - **Final Rates**: Lower, more conservative returns/inflation near retirement
+    - **Tapering Period**: The time over which rates gradually change (typically 40 years)
+    
+    This approach provides more realistic long-term projections compared to constant rates.
+    """)
+    
+    # Create a more organized layout with better spacing
+    st.markdown("---")
+    
+    # Inflation Rates Section
+    st.markdown("**📊 Inflation Rates**")
+    col_inf1, col_inf2 = st.columns(2)
+    with col_inf1:
+        user_inflation_taper_initial = st.number_input(
+            label='Initial Inflation (%)',
+            step=0.1,
+            min_value=0.0,
+            max_value=20.0,
+            value=DEFAULT_INITIAL_INFLATION_RATE,
+            help='Starting inflation rate that gradually decreases over time'
         )
-        
-        st.plotly_chart(fig_tapering, use_container_width=True)
-        
-        st.markdown("---")
-        
-        # Set tapering rates
+    with col_inf2:
+        user_inflation_taper_final = st.number_input(
+            label='Final Inflation (%)',
+            step=0.1,
+            min_value=0.0,
+            max_value=20.0,
+            value=DEFAULT_FINAL_INFLATION_RATE,
+            help='Ending inflation rate after the taper period'
+        )
+    
+    st.markdown("---")
+    
+    # Investment Returns Section
+    st.markdown("**💰 Investment Returns**")
+    st.markdown("*Returns that gradually decrease from initial to final values over the taper period*")
+    
+    # Create a more organized 3-column layout for investment returns
+    col_E, col_C, col_G = st.columns(3)
+    
+    with col_E:
+        st.markdown("**📈 Equity Returns**")
+        st.markdown("*Higher returns, higher risk*")
+        user_E_taper_initial = st.number_input(
+            'Initial (%)', 
+            value=DEFAULT_E_INITIAL, 
+            key='E_taper_initial',
+            help='Starting equity return rate'
+        )
+        user_E_taper_final = st.number_input(
+            'Final (%)', 
+            value=DEFAULT_E_FINAL, 
+            key='E_taper_final',
+            help='Ending equity return rate'
+        )
+    
+    with col_C:
+        st.markdown("**🏢 Corporate Bond Returns**")
+        st.markdown("*Medium returns, medium risk*")
+        user_C_taper_initial = st.number_input(
+            'Initial (%)', 
+            value=DEFAULT_C_INITIAL, 
+            key='C_taper_initial',
+            help='Starting corporate bond return rate'
+        )
+        user_C_taper_final = st.number_input(
+            'Final (%)', 
+            value=DEFAULT_C_FINAL, 
+            key='C_taper_final',
+            help='Ending corporate bond return rate'
+        )
+    
+    with col_G:
+        st.markdown("**🏛️ Government Bond Returns**")
+        st.markdown("*Lower returns, lower risk*")
+        user_G_taper_initial = st.number_input(
+            'Initial (%)', 
+            value=DEFAULT_G_INITIAL, 
+            key='G_taper_initial',
+            help='Starting government bond return rate'
+        )
+        user_G_taper_final = st.number_input(
+            'Final (%)', 
+            value=DEFAULT_G_FINAL, 
+            key='G_taper_final',
+            help='Ending government bond return rate'
+        )
+    
+    st.markdown("---")
+    
+    # Rate Tapering Visualization
+    st.markdown("**📊 Rate Tapering Visualization**")
+    
+    # Create visualization data
+    years = list(range(2025, 2065))  # 40-year period
+    taper_period = 40
+    
+    # Calculate tapering rates for each year
+    inflation_rates = []
+    equity_rates = []
+    corporate_rates = []
+    govt_rates = []
+    
+    for year in years:
+        years_elapsed = year - 2025
+        if years_elapsed <= taper_period:
+            # Linear tapering
+            progress = years_elapsed / taper_period
+            
+            # Inflation tapering
+            current_inflation = user_inflation_taper_initial + (user_inflation_taper_final - user_inflation_taper_initial) * progress
+            inflation_rates.append(current_inflation)
+            
+            # Investment return tapering
+            current_equity = user_E_taper_initial + (user_E_taper_final - user_E_taper_initial) * progress
+            current_corporate = user_C_taper_initial + (user_C_taper_final - user_C_taper_initial) * progress
+            current_govt = user_G_taper_initial + (user_G_taper_final - user_G_taper_initial) * progress
+            
+            equity_rates.append(current_equity)
+            corporate_rates.append(current_corporate)
+            govt_rates.append(current_govt)
+    else:
+            # Use final rates after taper period
+            inflation_rates.append(user_inflation_taper_final)
+            equity_rates.append(user_E_taper_final)
+            corporate_rates.append(user_C_taper_final)
+            govt_rates.append(user_G_taper_final)
+    
+    # Create the visualization chart
+    fig_tapering = go.Figure()
+    
+    # Add traces for each rate type
+    fig_tapering.add_trace(go.Scatter(
+        x=years,
+        y=inflation_rates,
+        mode='lines+markers',
+        name='Inflation Rate',
+        line=dict(color='#e74c3c', width=3),
+        marker=dict(size=4)
+    ))
+    
+    fig_tapering.add_trace(go.Scatter(
+        x=years,
+        y=equity_rates,
+        mode='lines+markers',
+        name='Equity Returns',
+        line=dict(color='#f39c12', width=3),
+        marker=dict(size=4)
+    ))
+    
+    fig_tapering.add_trace(go.Scatter(
+        x=years,
+        y=corporate_rates,
+        mode='lines+markers',
+        name='Corporate Bond Returns',
+        line=dict(color='#3498db', width=3),
+        marker=dict(size=4)
+    ))
+    
+    fig_tapering.add_trace(go.Scatter(
+        x=years,
+        y=govt_rates,
+        mode='lines+markers',
+        name='Government Bond Returns',
+        line=dict(color='#27ae60', width=3),
+        marker=dict(size=4)
+    ))
+    
+    # Update layout
+    fig_tapering.update_layout(
+        title="Rate Tapering Over Time (2025-2065)",
+        xaxis_title="Year",
+        yaxis_title="Rate (%)",
+        height=400,
+        showlegend=True,
+        template='plotly_white',
+                legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="center",
+            x=0.5
+        ),
+        yaxis=dict(
+            tickformat=".1f"
+        )
+    )
+    
+    st.plotly_chart(fig_tapering, use_container_width=True)
+    
+    st.markdown("---")
+    
+    # Set tapering rates
         initial_inflation_rate = user_inflation_taper_initial
         final_inflation_rate = user_inflation_taper_final
+    
+    # Validate and normalize investment allocation percentages
+    total_initial = user_E_taper_initial + user_C_taper_initial + user_G_taper_initial
+    total_final = user_E_taper_final + user_C_taper_final + user_G_taper_final
+    
+    # Normalize allocation percentages without showing warnings
+    if abs(total_initial - 100.0) > 0.01:
+        E_initial = (user_E_taper_initial / total_initial) * 100.0
+        C_initial = (user_C_taper_initial / total_initial) * 100.0
+        G_initial = (user_G_taper_initial / total_initial) * 100.0
+    else:
+        E_initial = user_E_taper_initial
+        C_initial = user_C_taper_initial
+        G_initial = user_G_taper_initial
         
-        # Validate and normalize investment allocation percentages
-        total_initial = user_E_taper_initial + user_C_taper_initial + user_G_taper_initial
-        total_final = user_E_taper_final + user_C_taper_final + user_G_taper_final
-        
-        # Normalize allocation percentages without showing warnings
-        if abs(total_initial - 100.0) > 0.01:
-            E_initial = (user_E_taper_initial / total_initial) * 100.0
-            C_initial = (user_C_taper_initial / total_initial) * 100.0
-            G_initial = (user_G_taper_initial / total_initial) * 100.0
-        else:
-            E_initial = user_E_taper_initial
-            C_initial = user_C_taper_initial
-            G_initial = user_G_taper_initial
-            
-        if abs(total_final - 100.0) > 0.01:
-            E_final = (user_E_taper_final / total_final) * 100.0
-            C_final = (user_C_taper_final / total_final) * 100.0
-            G_final = (user_G_taper_final / total_final) * 100.0
-        else:
-            E_final = user_E_taper_final
-            C_final = user_C_taper_final
-            G_final = user_G_taper_final
-        
-        # Store allocation percentages for use in calculations
-        # (Display moved to Investment Options section)
+    if abs(total_final - 100.0) > 0.01:
+        E_final = (user_E_taper_final / total_final) * 100.0
+        C_final = (user_C_taper_final / total_final) * 100.0
+        G_final = (user_G_taper_final / total_final) * 100.0
+    else:
+        E_final = user_E_taper_final
+        C_final = user_C_taper_final
+        G_final = user_G_taper_final
+    
+    # Store allocation percentages for use in calculations
+    # (Display moved to Investment Options section)
 
 with tab3:
     st.markdown("### 🏛️ Pay Commission Settings")
